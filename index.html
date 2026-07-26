@@ -4,40 +4,59 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Hoop Mix | Analítica Biomecánica de Élite</title>
-    <!-- Tipografías: Teko (Impacto) / Inter (Lectura) / Roboto Mono (Datos) -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&family=Roboto+Mono:wght@500;700&family=Teko:wght@600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
+    
+    <!-- Librerías de MediaPipe -->
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/control_utils/control_utils.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/pose/pose.js" crossorigin="anonymous"></script>
 </head>
 <body>
 
-    <!-- NAV BÁSICO -->
+    <!-- NAV -->
     <nav class="navbar">
         <div class="logo">HOOP<span>MIX</span></div>
     </nav>
 
-    <!-- SECCIÓN 1: HERO -->
+    <!-- SECCIÓN 1: HERO & APLICACIÓN -->
     <section class="hero" id="hero">
         <div class="hero-content">
             <h1 class="hero-title">TÚ TIRAS.<br>NUESTRA IA ANALIZA.<br><span class="highlight">AL INSTANTE.</span></h1>
-            <p class="hero-subtitle">Biomecánica de élite en tu navegador. Sin registros, sin descargas, 100% privado.</p>
-            <button class="cta-primary">ANALIZAR MI TIRO GRATIS</button>
+            <p class="hero-subtitle">Biomecánica de élite en tu navegador. Sin registros y 100% privado.</p>
+            
+            <!-- Zona de Subida y Consentimiento Legal -->
+            <div class="upload-module">
+                <div class="legal-checkbox-container">
+                    <input type="checkbox" id="legal-consent">
+                    <label for="legal-consent">
+                        He leído y acepto la <span class="legal-link" onclick="openModal('modal-privacidad')">Política de Privacidad y uso de IA</span>. Entiendo que el procesamiento de mi vídeo es 100% local.
+                    </label>
+                </div>
+                
+                <label for="video-upload" class="cta-primary disabled" id="upload-label">
+                    ANALIZAR MI TIRO GRATIS
+                </label>
+                <!-- Input oculto y deshabilitado por defecto hasta que se acepte la política -->
+                <input type="file" id="video-upload" accept="video/mp4,video/mov,video/webm" disabled>
+                
+                <p id="status-text" class="status-msg">Cargando motor biomecánico...</p>
+            </div>
         </div>
         
+        <!-- Reproductor y Canvas -->
         <div class="hero-visual">
-            <div class="mockup-phone">
-                <!-- Simulación del vídeo y la IA -->
-                <div class="mockup-screen">
-                    <div class="overlay-skeleton"></div>
-                    <div class="data-tag tag-1">Carga: 65°</div>
-                    <div class="data-tag tag-2">Ext: 175°</div>
-                </div>
+            <div class="canvas-wrapper">
+                <video id="input_video" playsinline muted style="display:none;"></video>
+                <canvas id="output_canvas"></canvas>
             </div>
         </div>
     </section>
 
-    <!-- SECCIÓN 2: THE FRICTIONLESS EXPERIENCE -->
+    <!-- SECCIÓN 2: VENTAJAS -->
     <section class="frictionless" id="features">
         <div class="feature-card">
             <div class="feature-icon">⚡</div>
@@ -56,70 +75,139 @@
         </div>
     </section>
 
-    <!-- SECCIÓN 3: DEEP DIVE -->
+    <!-- SECCIÓN 3: RESULTADOS EN TIEMPO REAL -->
     <section class="deep-dive" id="metrics">
-        <h2 class="section-heading">LAS MÉTRICAS QUE IMPORTAN</h2>
+        <h2 class="section-heading">LAS MÉTRICAS DE TU TIRO</h2>
         <div class="metrics-grid">
             <div class="metric-panel">
-                <div class="metric-data">∠ <span class="mono">65°</span></div>
+                <div class="metric-data">∠ <span class="mono" id="min-angle-val">--°</span></div>
                 <h4 class="metric-name">PUNTO DE CARGA</h4>
-                <p class="metric-desc">Evaluación del ángulo Hombro-Codo-Muñeca. Evita codos cerrados (<70°) para maximizar transferencia de fuerza.</p>
+                <p class="metric-desc" id="min-angle-msg">Sube un vídeo para evaluar tu Set Point.</p>
             </div>
             <div class="metric-panel">
-                <div class="metric-data">∠ <span class="mono">175°</span></div>
+                <div class="metric-data">∠ <span class="mono" id="max-angle-val">--°</span></div>
                 <h4 class="metric-name">EXTENSIÓN FINAL</h4>
-                <p class="metric-desc">Medición en la fase más alta. Un follow-through cercano a 180° asegura parábola y rotación.</p>
+                <p class="metric-desc" id="max-angle-msg">Sube un vídeo para evaluar tu Follow-through.</p>
             </div>
             <div class="metric-panel">
-                <div class="metric-data">Y <span class="mono">+45cm</span></div>
-                <h4 class="metric-name">ELEVACIÓN RELATIVA</h4>
-                <p class="metric-desc">Tracking del tobillo en el eje vertical para estimar la explosividad de tu salto.</p>
+                <div class="metric-data">Y <span class="mono" id="jump-val">--</span></div>
+                <h4 class="metric-name">ELEVACIÓN</h4>
+                <p class="metric-desc" id="jump-msg">Sube un vídeo para estimar tu salto vertical.</p>
             </div>
         </div>
     </section>
 
-    <!-- SECCIÓN 4: TRANSPARENCIA Y HONESTIDAD -->
-    <section class="transparency" id="guidelines">
-        <h2 class="section-heading">OPTIMIZADO PARA LA REALIDAD</h2>
-        <div class="dos-donts-container">
-            <div class="rule-card do-card">
-                <div class="rule-icon success">✓</div>
-                <h4 class="rule-title">Precisión Máxima</h4>
-                <p class="rule-text">Graba completamente de perfil, con todo el cuerpo visible y la cámara estática.</p>
+    <!-- FOOTER LEGAL -->
+    <footer class="legal-footer">
+        <div class="footer-links">
+            <span onclick="openModal('modal-aviso')">Aviso Legal</span>
+            <span onclick="openModal('modal-privacidad')">Política de Privacidad y IA</span>
+            <span onclick="openModal('modal-terminos')">Términos y Condiciones</span>
+        </div>
+        <p class="copyright">© 2026 Hoop Mix. Todos los derechos reservados.</p>
+    </footer>
+
+    <!-- BANNER INFORMATIVO DE COOKIES (No intrusivo) -->
+    <div class="cookie-banner" id="cookie-banner">
+        <p><strong>Transparencia de Datos:</strong> Hoop Mix utiliza una arquitectura <em>Zero-Data</em>. No utilizamos cookies de rastreo, no almacenamos tus vídeos y no vendemos datos. Tu privacidad está garantizada por diseño.</p>
+        <button onclick="closeCookies()">Entendido</button>
+    </div>
+
+    <!-- MODALES LEGALES (Ocultos por defecto) -->
+    <div class="modal-overlay" id="modal-overlay">
+        
+        <!-- Modal Privacidad e IA -->
+        <div class="legal-modal" id="modal-privacidad">
+            <div class="modal-header">
+                <h2>Política de Privacidad y Uso de IA</h2>
+                <span class="close-btn" onclick="closeModal()">✕</span>
             </div>
-            <div class="rule-card dont-card">
-                <div class="rule-icon error">✕</div>
-                <h4 class="rule-title">Ángulos Distorsionados</h4>
-                <p class="rule-text">Evita grabar de frente, en diagonal o con movimiento brusco de cámara.</p>
+            <div class="modal-body">
+                <h3>1. Tratamiento de Datos (Zero-Data Policy)</h3>
+                <p>En Hoop Mix aplicamos el principio de Privacidad por Diseño y por Defecto (Art. 25 RGPD). <strong>No recabamos, almacenamos, ni transmitimos los vídeos</strong> que procesas en esta plataforma. El análisis biomecánico se ejecuta de manera local (Edge Computing) en la memoria volátil (RAM) de tu propio dispositivo.</p>
+                <h3>2. Uso de Inteligencia Artificial (MediaPipe Pose)</h3>
+                <p>Nuestra tecnología utiliza modelos de visión por computador pre-entrenados para la inferencia de coordenadas articulares en tiempo real. Este modelo funciona en tu navegador mediante WebAssembly.</p>
+                <ul>
+                    <li><strong>No biometría persistente:</strong> La IA solo detecta puntos clave del esqueleto (Landmarks) fotograma a fotograma. No realiza reconocimiento facial ni almacena patrones biométricos que permitan tu identificación unívoca.</li>
+                    <li><strong>No entrenamiento con tus datos:</strong> Tus vídeos bajo ningún concepto son utilizados para reentrenar o mejorar nuestros algoritmos ni son enviados a servidores de terceros.</li>
+                </ul>
             </div>
         </div>
-    </section>
 
-    <!-- SECCIÓN 5: ROADMAP -->
-    <section class="roadmap" id="roadmap">
-        <h2 class="section-heading">VISIÓN DE FUTURO</h2>
-        <div class="roadmap-timeline">
-            <div class="roadmap-item active">
-                <span class="status-dot live"></span>
-                <p class="roadmap-text">Mecánica de Tren Superior y Salto (Live)</p>
+        <!-- Modal Términos -->
+        <div class="legal-modal" id="modal-terminos">
+            <div class="modal-header">
+                <h2>Términos y Condiciones</h2>
+                <span class="close-btn" onclick="closeModal()">✕</span>
             </div>
-            <div class="roadmap-item">
-                <span class="status-dot"></span>
-                <p class="roadmap-text">Detección Automática del Release Frame (Próximamente)</p>
-            </div>
-            <div class="roadmap-item">
-                <span class="status-dot"></span>
-                <p class="roadmap-text">Análisis de Tren Inferior (Próximamente)</p>
+            <div class="modal-body">
+                <h3>1. Naturaleza del Servicio</h3>
+                <p>Hoop Mix proporciona una herramienta de software con fines puramente deportivos, recreativos y formativos. Las métricas generadas son estimaciones algorítmicas y no sustituyen la evaluación de un entrenador profesional.</p>
+                <h3>2. Exención de Responsabilidad Médica</h3>
+                <p>Esta herramienta no es un dispositivo médico. No debe utilizarse para el diagnóstico, tratamiento o prevención de lesiones articulares o musculares. El usuario asume toda la responsabilidad sobre la ejecución física de sus movimientos.</p>
             </div>
         </div>
-    </section>
 
-    <!-- SECCIÓN 6: FINAL CTA -->
-    <section class="final-cta" id="cta">
-        <h2 class="cta-heading">¿LISTO PARA ARREGLAR TU TIRO?</h2>
-        <p class="cta-sub">Sube tu vídeo ahora y domina la pista.</p>
-        <button class="cta-massive">EMPEZAR ANÁLISIS GRATIS</button>
-    </section>
+        <!-- Modal Aviso Legal -->
+        <div class="legal-modal" id="modal-aviso">
+            <div class="modal-header">
+                <h2>Aviso Legal</h2>
+                <span class="close-btn" onclick="closeModal()">✕</span>
+            </div>
+            <div class="modal-body">
+                <p>En cumplimiento con el deber de información recogido en el artículo 10 de la Ley 34/2002, de 11 de julio, de Servicios de la Sociedad de la Información y del Comercio Electrónico (LSSI-CE):</p>
+                <p><strong>Titularidad:</strong> El presente sitio web es propiedad de [TU NOMBRE O EMPRESA], con correo electrónico de contacto: [TU CORREO].</p>
+                <p><strong>Propiedad Intelectual:</strong> Todos los derechos sobre el código fuente, diseño, logotipos y textos pertenecen a Hoop Mix. El uso del motor de MediaPipe se realiza bajo licencia Apache 2.0.</p>
+            </div>
+        </div>
 
+    </div>
+
+    <!-- Script de Interfaz de Usuario (UI Legal) -->
+    <script>
+        // Lógica de consentimiento de subida
+        const consentCheckbox = document.getElementById('legal-consent');
+        const uploadInput = document.getElementById('video-upload');
+        const uploadLabel = document.getElementById('upload-label');
+
+        consentCheckbox.addEventListener('change', (e) => {
+            if (e.target.checked) {
+                uploadInput.disabled = false;
+                uploadLabel.classList.remove('disabled');
+            } else {
+                uploadInput.disabled = true;
+                uploadLabel.classList.add('disabled');
+            }
+        });
+
+        // Lógica de Modales
+        const overlay = document.getElementById('modal-overlay');
+        const modals = document.querySelectorAll('.legal-modal');
+
+        function openModal(id) {
+            overlay.style.display = 'flex';
+            modals.forEach(m => m.style.display = 'none');
+            document.getElementById(id).style.display = 'block';
+            document.body.style.overflow = 'hidden'; // Evita scroll de fondo
+        }
+
+        function closeModal() {
+            overlay.style.display = 'none';
+            document.body.style.overflow = 'auto';
+        }
+
+        // Lógica del Cookie Banner
+        function closeCookies() {
+            document.getElementById('cookie-banner').style.display = 'none';
+            localStorage.setItem('hoopmix_cookies_accepted', 'true');
+        }
+        
+        if(!localStorage.getItem('hoopmix_cookies_accepted')) {
+            document.getElementById('cookie-banner').style.display = 'flex';
+        }
+    </script>
+    
+    <!-- Tu script de la IA (No tocar) -->
+    <script src="script.js"></script>
 </body>
 </html>
