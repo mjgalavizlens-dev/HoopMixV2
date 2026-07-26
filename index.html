@@ -3,97 +3,123 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Hoop Mix - Análisis Biomecánico</title>
+    <title>Hoop Mix | Analítica Biomecánica de Élite</title>
+    <!-- Tipografías: Teko (Impacto) / Inter (Lectura) / Roboto Mono (Datos) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&family=Roboto+Mono:wght@500;700&family=Teko:wght@600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
-    
-    <!-- Librerías de MediaPipe (Procesamiento en navegador) -->
-    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/control_utils/control_utils.js" crossorigin="anonymous"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js" crossorigin="anonymous"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/pose/pose.js" crossorigin="anonymous"></script>
 </head>
 <body>
-    <div class="app-container">
-        <!-- Cabecera con tu Logo -->
-        <header class="header">
-            <img src="logo.png" alt="Hoop Mix Logo" class="brand-logo">
-            <div class="privacy-badge">
-                🔒 Procesamiento 100% Local
-            </div>
-        </header>
 
-        <!-- Tarjeta de Instrucciones de Grabación -->
-        <section class="instructions-card">
-            <h3>📹 Para un análisis perfecto:</h3>
-            <div class="tips-grid">
-                <div class="tip-item">
-                    <span class="tip-icon">📐</span>
-                    <div>
-                        <strong>Graba de lado (Perfil)</strong>
-                        <p>Fundamental para medir el ángulo de tu brazo.</p>
-                    </div>
-                </div>
-                <div class="tip-item">
-                    <span class="tip-icon">👤</span>
-                    <div>
-                        <strong>Cuerpo completo</strong>
-                        <p>Deben verse tus pies al saltar y tu mano al soltar el balón.</p>
-                    </div>
+    <!-- NAV BÁSICO -->
+    <nav class="navbar">
+        <div class="logo">HOOP<span>MIX</span></div>
+    </nav>
+
+    <!-- SECCIÓN 1: HERO -->
+    <section class="hero" id="hero">
+        <div class="hero-content">
+            <h1 class="hero-title">TÚ TIRAS.<br>NUESTRA IA ANALIZA.<br><span class="highlight">AL INSTANTE.</span></h1>
+            <p class="hero-subtitle">Biomecánica de élite en tu navegador. Sin registros, sin descargas, 100% privado.</p>
+            <button class="cta-primary">ANALIZAR MI TIRO GRATIS</button>
+        </div>
+        
+        <div class="hero-visual">
+            <div class="mockup-phone">
+                <!-- Simulación del vídeo y la IA -->
+                <div class="mockup-screen">
+                    <div class="overlay-skeleton"></div>
+                    <div class="data-tag tag-1">Carga: 65°</div>
+                    <div class="data-tag tag-2">Ext: 175°</div>
                 </div>
             </div>
-        </section>
+        </div>
+    </section>
 
-        <!-- Zona de Subida de Archivo -->
-        <section class="upload-section">
-            <label for="video-upload" class="upload-btn">
-                <span>📤 Analizar mi tiro (MP4/MOV)</span>
-            </label>
-            <input type="file" id="video-upload" accept="video/mp4,video/mov,video/webm">
-            <p id="status-text" class="status-msg">Cargando motor biomecánico...</p>
-        </section>
+    <!-- SECCIÓN 2: THE FRICTIONLESS EXPERIENCE -->
+    <section class="frictionless" id="features">
+        <div class="feature-card">
+            <div class="feature-icon">⚡</div>
+            <h3 class="feature-title">Cero Espera</h3>
+            <p class="feature-text">Procesado en segundos gracias a WebAssembly y tu GPU. Inmediatez pura.</p>
+        </div>
+        <div class="feature-card">
+            <div class="feature-icon">🔒</div>
+            <h3 class="feature-title">100% Privado</h3>
+            <p class="feature-text">Tus vídeos nunca salen de tu dispositivo. El análisis ocurre en tu RAM. Privacidad total.</p>
+        </div>
+        <div class="feature-card">
+            <div class="feature-icon">🌐</div>
+            <h3 class="feature-title">Sin Instalación</h3>
+            <p class="feature-text">Funciona en iOS, Android o PC. Desde Instagram directo a la acción.</p>
+        </div>
+    </section>
 
-        <!-- Reproductor / Canvas del Vídeo -->
-        <section class="video-section">
-            <div class="canvas-wrapper">
-                <video id="input_video" playsinline muted style="display:none;"></video>
-                <canvas id="output_canvas"></canvas>
+    <!-- SECCIÓN 3: DEEP DIVE -->
+    <section class="deep-dive" id="metrics">
+        <h2 class="section-heading">LAS MÉTRICAS QUE IMPORTAN</h2>
+        <div class="metrics-grid">
+            <div class="metric-panel">
+                <div class="metric-data">∠ <span class="mono">65°</span></div>
+                <h4 class="metric-name">PUNTO DE CARGA</h4>
+                <p class="metric-desc">Evaluación del ángulo Hombro-Codo-Muñeca. Evita codos cerrados (<70°) para maximizar transferencia de fuerza.</p>
             </div>
-        </section>
-
-        <!-- Tarjetas de Métricas -->
-        <section class="metrics-section">
-            <h2>Métricas del Lanzamiento</h2>
-            <div class="metrics-grid">
-                <div class="metric-card">
-                    <div class="card-header">
-                        <span class="metric-title">Punto de Carga</span>
-                        <span class="metric-subtitle">Set Point</span>
-                    </div>
-                    <div class="metric-value" id="min-angle-val">--°</div>
-                    <div class="metric-feedback" id="min-angle-msg">Esperando vídeo...</div>
-                </div>
-
-                <div class="metric-card">
-                    <div class="card-header">
-                        <span class="metric-title">Extensión final</span>
-                        <span class="metric-subtitle">Follow-through</span>
-                    </div>
-                    <div class="metric-value" id="max-angle-val">--°</div>
-                    <div class="metric-feedback" id="max-angle-msg">Esperando vídeo...</div>
-                </div>
-
-                <div class="metric-card">
-                    <div class="card-header">
-                        <span class="metric-title">Elevación</span>
-                        <span class="metric-subtitle">Salto Vertical</span>
-                    </div>
-                    <div class="metric-value" id="jump-val">--</div>
-                    <div class="metric-feedback" id="jump-msg">Esperando vídeo...</div>
-                </div>
+            <div class="metric-panel">
+                <div class="metric-data">∠ <span class="mono">175°</span></div>
+                <h4 class="metric-name">EXTENSIÓN FINAL</h4>
+                <p class="metric-desc">Medición en la fase más alta. Un follow-through cercano a 180° asegura parábola y rotación.</p>
             </div>
-        </section>
-    </div>
+            <div class="metric-panel">
+                <div class="metric-data">Y <span class="mono">+45cm</span></div>
+                <h4 class="metric-name">ELEVACIÓN RELATIVA</h4>
+                <p class="metric-desc">Tracking del tobillo en el eje vertical para estimar la explosividad de tu salto.</p>
+            </div>
+        </div>
+    </section>
 
-    <script src="script.js"></script>
+    <!-- SECCIÓN 4: TRANSPARENCIA Y HONESTIDAD -->
+    <section class="transparency" id="guidelines">
+        <h2 class="section-heading">OPTIMIZADO PARA LA REALIDAD</h2>
+        <div class="dos-donts-container">
+            <div class="rule-card do-card">
+                <div class="rule-icon success">✓</div>
+                <h4 class="rule-title">Precisión Máxima</h4>
+                <p class="rule-text">Graba completamente de perfil, con todo el cuerpo visible y la cámara estática.</p>
+            </div>
+            <div class="rule-card dont-card">
+                <div class="rule-icon error">✕</div>
+                <h4 class="rule-title">Ángulos Distorsionados</h4>
+                <p class="rule-text">Evita grabar de frente, en diagonal o con movimiento brusco de cámara.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- SECCIÓN 5: ROADMAP -->
+    <section class="roadmap" id="roadmap">
+        <h2 class="section-heading">VISIÓN DE FUTURO</h2>
+        <div class="roadmap-timeline">
+            <div class="roadmap-item active">
+                <span class="status-dot live"></span>
+                <p class="roadmap-text">Mecánica de Tren Superior y Salto (Live)</p>
+            </div>
+            <div class="roadmap-item">
+                <span class="status-dot"></span>
+                <p class="roadmap-text">Detección Automática del Release Frame (Próximamente)</p>
+            </div>
+            <div class="roadmap-item">
+                <span class="status-dot"></span>
+                <p class="roadmap-text">Análisis de Tren Inferior (Próximamente)</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- SECCIÓN 6: FINAL CTA -->
+    <section class="final-cta" id="cta">
+        <h2 class="cta-heading">¿LISTO PARA ARREGLAR TU TIRO?</h2>
+        <p class="cta-sub">Sube tu vídeo ahora y domina la pista.</p>
+        <button class="cta-massive">EMPEZAR ANÁLISIS GRATIS</button>
+    </section>
+
 </body>
 </html>
