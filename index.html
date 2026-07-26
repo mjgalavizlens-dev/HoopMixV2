@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>HoopsAI - Análisis Biomecánico de Tiro</title>
+    <title>Hoop Mix - Análisis Biomecánico</title>
     <link rel="stylesheet" href="style.css">
     
     <!-- Librerías de MediaPipe (Procesamiento en navegador) -->
@@ -14,40 +14,30 @@
 </head>
 <body>
     <div class="app-container">
-        <!-- Cabecera -->
+        <!-- Cabecera con tu Logo -->
         <header class="header">
-            <div class="brand">
-                <span class="logo-icon">🏀</span>
-                <h1>Hoops<span>AI</span></h1>
-            </div>
+            <img src="logo.png" alt="Hoop Mix Logo" class="brand-logo">
             <div class="privacy-badge">
-                🔒 100% Local y Privado
+                🔒 Procesamiento 100% Local
             </div>
         </header>
 
         <!-- Tarjeta de Instrucciones de Grabación -->
         <section class="instructions-card">
-            <h3>📹 Antes de subir tu vídeo:</h3>
+            <h3>📹 Para un análisis perfecto:</h3>
             <div class="tips-grid">
                 <div class="tip-item">
                     <span class="tip-icon">📐</span>
                     <div>
-                        <strong>Graba completamente de lado (Perfil)</strong>
-                        <p>Fundamental para medir el ángulo del codo y las piernas.</p>
+                        <strong>Graba de lado (Perfil)</strong>
+                        <p>Fundamental para medir el ángulo de tu brazo.</p>
                     </div>
                 </div>
                 <div class="tip-item">
                     <span class="tip-icon">👤</span>
                     <div>
-                        <strong>Cuerpo completo en encuadre</strong>
-                        <p>Asegúrate de que se vean tus pies en el salto y la extensión de la mano.</p>
-                    </div>
-                </div>
-                <div class="tip-item">
-                    <span class="tip-icon">💡</span>
-                    <div>
-                        <strong>Buena luz y cámara fija</strong>
-                        <p>Evita vídeos a contraluz o con movimiento brusco de cámara.</p>
+                        <strong>Cuerpo completo</strong>
+                        <p>Deben verse tus pies al saltar y tu mano al soltar el balón.</p>
                     </div>
                 </div>
             </div>
@@ -56,10 +46,10 @@
         <!-- Zona de Subida de Archivo -->
         <section class="upload-section">
             <label for="video-upload" class="upload-btn">
-                <span>📤 Seleccionar Vídeo de Tiro</span>
+                <span>📤 Analizar mi tiro (MP4/MOV)</span>
             </label>
             <input type="file" id="video-upload" accept="video/mp4,video/mov,video/webm">
-            <p id="status-text" class="status-msg">Cargando motor de IA...</p>
+            <p id="status-text" class="status-msg">Cargando motor biomecánico...</p>
         </section>
 
         <!-- Reproductor / Canvas del Vídeo -->
@@ -72,7 +62,7 @@
 
         <!-- Tarjetas de Métricas -->
         <section class="metrics-section">
-            <h2>Resultados del Análisis</h2>
+            <h2>Métricas del Lanzamiento</h2>
             <div class="metrics-grid">
                 <div class="metric-card">
                     <div class="card-header">
@@ -80,38 +70,28 @@
                         <span class="metric-subtitle">Set Point</span>
                     </div>
                     <div class="metric-value" id="min-angle-val">--°</div>
-                    <div class="metric-feedback" id="min-angle-msg">Sube un vídeo para analizar</div>
+                    <div class="metric-feedback" id="min-angle-msg">Esperando vídeo...</div>
                 </div>
 
                 <div class="metric-card">
                     <div class="card-header">
-                        <span class="metric-title">Extensión</span>
+                        <span class="metric-title">Extensión final</span>
                         <span class="metric-subtitle">Follow-through</span>
                     </div>
                     <div class="metric-value" id="max-angle-val">--°</div>
-                    <div class="metric-feedback" id="max-angle-msg">Sube un vídeo para analizar</div>
+                    <div class="metric-feedback" id="max-angle-msg">Esperando vídeo...</div>
                 </div>
 
                 <div class="metric-card">
                     <div class="card-header">
-                        <span class="metric-title">Elevación Relativa</span>
+                        <span class="metric-title">Elevación</span>
                         <span class="metric-subtitle">Salto Vertical</span>
                     </div>
                     <div class="metric-value" id="jump-val">--</div>
-                    <div class="metric-feedback" id="jump-msg">Análisis de salto</div>
+                    <div class="metric-feedback" id="jump-msg">Esperando vídeo...</div>
                 </div>
             </div>
         </section>
-
-        <!-- Pie de página y Garantía de Privacidad -->
-        <footer class="footer">
-            <div class="privacy-box">
-                <p><strong>🔒 Garantía de Privacidad:</strong> Tu vídeo se procesa de forma local en la memoria de tu propio teléfono u ordenador. Ninguna imagen se sube ni se almacena en ningún servidor externo.</p>
-            </div>
-            <p class="credits">
-                HoopsAI v2.0 | ¿Feedback o sugerencias? Háblame en Instagram: <a href="https://instagram.com" target="_blank" rel="noopener">@tu_usuario</a>
-            </p>
-        </footer>
     </div>
 
     <script src="script.js"></script>
