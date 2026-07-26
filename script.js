@@ -47,6 +47,8 @@ pose.onResults(onResults);
 function onResults(results) {
     canvasCtx.save();
     canvasCtx.clearRect(0, 0, canvasElement.width, canvasElement.height);
+    
+    // Dibujar el fotograma del vídeo en el canvas
     canvasCtx.drawImage(results.image, 0, 0, canvasElement.width, canvasElement.height);
 
     if (results.poseLandmarks) {
@@ -58,8 +60,9 @@ function onResults(results) {
         const shoulder = landmarks[12];
         const elbow = landmarks[14];
         const wrist = landmarks[16];
-        const hip = landmarks[24];
+        const hip = landmarks[24]; // Cadera derecha
 
+        // Cálculos de Tiro
         if (shoulder && elbow && wrist) {
             const currentAngle = calculateAngle(shoulder, elbow, wrist);
             if (currentAngle < minElbowAngle) minElbowAngle = Math.round(currentAngle);
@@ -69,6 +72,7 @@ function onResults(results) {
             maxAngleVal.innerText = `${maxElbowAngle}°`;
         }
 
+        // Cálculos de Salto
         if (hip) {
             const yPos = hip.y * canvasElement.height;
             if (yPos < minYHip) minYHip = yPos;
@@ -81,7 +85,7 @@ function onResults(results) {
     canvasCtx.restore();
 }
 
-// PROCESAMIENTO DE VÍDEO CON BARRA DE PROGRESO REAL
+// CARGA DEL VÍDEO Y RESETEO DE UI
 fileInput.addEventListener('change', (e) => {
     const file = e.target.files[0];
     if (!file) return;
@@ -97,6 +101,9 @@ fileInput.addEventListener('change', (e) => {
     maxElbowAngle = 0;
     minYHip = 10000;
     maxYHip = 0;
+    minAngleVal.innerText = `--°`;
+    maxAngleVal.innerText = `--°`;
+    jumpVal.innerText = `--`;
 
     const url = URL.createObjectURL(file);
     videoElement.src = url;
@@ -109,37 +116,57 @@ fileInput.addEventListener('change', (e) => {
     };
 });
 
+// PROCESAMIENTO ASÍNCRONO DE VÍDEO (SOLUCIÓN PANTALLA NEGRA)
 async function processVideo() {
-    videoElement.currentTime = 0;
     const duration = videoElement.duration;
+    // Empezamos en 0.001s para forzar al navegador a decodificar el primer fotograma
+    let currentTime = 0.001; 
+    // Analiza un fotograma cada 0.05 segundos (precisión de grado profesional)
+    const frameStep = 0.05; 
 
-    function step() {
-        if (videoElement.currentTime < duration) {
-            pose.send({ image: videoElement });
-
-            // Actualizar Línea de Carga
-            const progress = Math.round((videoElement.currentTime / duration) * 100);
+    // Este evento se dispara SOLO cuando el fotograma real ya está listo y visible
+    videoElement.onseeked = async () => {
+        try {
+            // 1. Enviamos el fotograma real a la IA y esperamos a que lo analice
+            await pose.send({ image: videoElement });
+            
+            // 2. Actualizamos la barra de progreso
+            const progress = Math.min(100, Math.round((currentTime / duration) * 100));
             progressBar.style.width = `${progress}%`;
             progressPercent.innerText = `${progress}%`;
 
-            videoElement.currentTime += 0.08; // Avanzar fotogramas
-            requestAnimationFrame(step);
-        } else {
-            // Finalizado
-            progressBar.style.width = "100%";
-            progressPercent.innerText = "100%";
-            statusText.innerText = "Análisis completado";
-            generateCoachAdvice();
+            // 3. Avanzamos al siguiente frame o terminamos el análisis
+            if (currentTime + frameStep <= duration) {
+                currentTime += frameStep;
+                videoElement.currentTime = currentTime; // Esto vuelve a disparar el onseeked
+            } else if (currentTime < duration) {
+                currentTime = duration;
+                videoElement.currentTime = currentTime;
+            } else {
+                // Finalizado
+                progressBar.style.width = "100%";
+                progressPercent.innerText = "100%";
+                statusText.innerText = "Análisis completado";
+                generateCoachAdvice();
+            }
+        } catch (error) {
+            console.error("Error analizando el fotograma:", error);
+            statusText.innerText = "Error en el análisis. Intenta de nuevo.";
         }
-    }
-    step();
+    };
+
+    // Arrancamos la cadena de análisis
+    videoElement.currentTime = currentTime;
 }
 
 // GENERADOR DE CONSEJOS DE ENTRENADOR DE ÉLITE
 function generateCoachAdvice() {
     coachCard.style.display = "block";
     
-    if (typeof currentMode === 'undefined' || currentMode === 'shot') {
+    // Llama a la variable currentMode definida en el index.html
+    const mode = typeof currentMode !== 'undefined' ? currentMode : 'shot';
+    
+    if (mode === 'shot') {
         // CONSEJOS DE TIRO
         let feedback = "";
         
@@ -152,9 +179,9 @@ function generateCoachAdvice() {
         }
 
         if (maxElbowAngle < 155) {
-            feedback += " Además, <strong>no estás terminando la extensión:</strong> Cortas el seguimiento con la muñeca antes de tiempo. Mantén el brazo extendido y la 'mano en el aro' hasta que el balón toque la red.";
+            feedback += "<br><br>Además, <strong>no estás terminando la extensión:</strong> Cortas el seguimiento con la muñeca antes de tiempo. Mantén el brazo extendido y la 'mano en el aro' hasta que el balón toque la red.";
         } else {
-            feedback += " <strong>Excelente seguimiento (Follow-through):</strong> Tu brazo se extiende completamente asegurando una parábola suave.";
+            feedback += "<br><br><strong>Excelente seguimiento (Follow-through):</strong> Tu brazo se extiende completamente asegurando una parábola suave.";
         }
 
         coachAdvice.innerHTML = feedback;
