@@ -1,4 +1,169 @@
-/* --- ESTILOS DE LA APLICACIÓN Y CANVAS --- */
+/* VARIABLES KINETIC MINIMALISMO TÉCNICO */
+:root {
+    --bg-asphalt: #0b0e14;
+    --bg-panel: #131821;
+    --accent-orange: #ff4a00;
+    --accent-orange-hover: #e04200;
+    --cyber-blue: #00f0ff;
+    --text-pure: #ffffff;
+    --text-muted: #8b9bb4;
+    --success-green: #00ff88;
+    --error-red: #ff3366;
+    
+    --font-display: 'Teko', sans-serif;
+    --font-body: 'Inter', sans-serif;
+    --font-data: 'Roboto Mono', monospace;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    background-color: var(--bg-asphalt);
+    color: var(--text-pure);
+    font-family: var(--font-body);
+    -webkit-font-smoothing: antialiased;
+    overflow-x: hidden;
+}
+
+/* NAVBAR */
+.navbar {
+    padding: 20px;
+    text-align: center;
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+}
+.logo {
+    font-family: var(--font-display);
+    font-size: 32px;
+    letter-spacing: 1px;
+}
+.logo span {
+    color: var(--accent-orange);
+}
+
+/* TIPOGRAFÍA GLOBAL */
+.section-heading {
+    font-family: var(--font-display);
+    font-size: 42px;
+    letter-spacing: 1px;
+    text-align: center;
+    margin-bottom: 30px;
+    color: var(--text-pure);
+}
+
+/* HERO (MOBILE FIRST) */
+.hero {
+    display: flex;
+    flex-direction: column;
+    padding: 40px 20px;
+    gap: 40px;
+}
+.hero-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    z-index: 2;
+}
+.hero-title {
+    font-family: var(--font-display);
+    font-size: 56px;
+    line-height: 0.9;
+    letter-spacing: 0px;
+    margin-bottom: 15px;
+}
+.hero-title .highlight {
+    color: var(--accent-orange);
+}
+.hero-subtitle {
+    font-size: 16px;
+    color: var(--text-muted);
+    line-height: 1.5;
+}
+
+/* MÓDULO DE SUBIDA Y CHECKBOX LEGAL */
+.upload-module {
+    width: 100%;
+    max-width: 380px;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    margin-top: 20px;
+}
+
+.legal-checkbox-container {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    background: rgba(255, 255, 255, 0.03);
+    padding: 12px;
+    border-radius: 8px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    text-align: left;
+}
+
+.legal-checkbox-container input {
+    margin-top: 4px;
+    accent-color: var(--accent-orange);
+    cursor: pointer;
+}
+
+.legal-checkbox-container label {
+    font-size: 12px;
+    color: var(--text-muted);
+    line-height: 1.4;
+}
+
+.legal-link {
+    color: var(--cyber-blue);
+    text-decoration: underline;
+    cursor: pointer;
+}
+
+input[type="file"] {
+    display: none;
+}
+
+.cta-primary {
+    background-color: var(--accent-orange);
+    color: #000;
+    border: none;
+    padding: 18px 32px;
+    font-family: var(--font-display);
+    font-size: 24px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    cursor: pointer;
+    transition: transform 0.2s, background 0.2s;
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border-radius: 8px;
+}
+
+.cta-primary:not(.disabled):active {
+    transform: scale(0.98);
+}
+
+.cta-primary.disabled {
+    background-color: #333;
+    color: #666;
+    cursor: not-allowed;
+    box-shadow: none;
+}
+
+.status-msg {
+    margin-top: 10px;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--cyber-blue);
+}
+
+/* VISUAL DE IA (CANVAS) */
 .hero-visual {
     width: 100%;
     display: flex;
@@ -27,69 +192,72 @@ canvas {
     display: block;
 }
 
-.status-msg {
-    margin-top: 15px;
+/* VENTAJAS (THE FRICTIONLESS EXPERIENCE) */
+.frictionless {
+    padding: 60px 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+.feature-card {
+    background: var(--bg-panel);
+    padding: 24px;
+    border-left: 3px solid var(--accent-orange);
+}
+.feature-icon {
+    font-size: 32px;
+    margin-bottom: 12px;
+}
+.feature-title {
+    font-family: var(--font-display);
+    font-size: 24px;
+    letter-spacing: 1px;
+    margin-bottom: 8px;
+}
+.feature-text {
     font-size: 14px;
-    font-weight: 600;
-    color: var(--cyber-blue);
+    color: var(--text-muted);
+    line-height: 1.5;
 }
 
-input[type="file"] {
-    display: none; /* Se oculta porque usamos el label como botón */
+/* MÉTRICAS (NASA DASHBOARD STYLE) */
+.deep-dive {
+    padding: 60px 20px;
+    background: linear-gradient(180deg, var(--bg-asphalt) 0%, #080b10 100%);
+    background-image: linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px);
+    background-size: 40px 40px;
 }
-
-/* --- ESTILOS LEGALES Y DE CONSENTIMIENTO --- */
-.upload-module {
-    width: 100%;
-    max-width: 380px;
+.metrics-grid {
     display: flex;
     flex-direction: column;
     gap: 15px;
-    margin-top: 20px;
 }
-
-.legal-checkbox-container {
-    display: flex;
-    align-items: flex-start;
-    gap: 10px;
-    background: rgba(255, 255, 255, 0.03);
-    padding: 12px;
-    border-radius: 8px;
-    border: 1px solid rgba(255, 255, 255, 0.1);
+.metric-panel {
+    background: rgba(19, 24, 33, 0.8);
+    border: 1px solid rgba(255,255,255,0.05);
+    padding: 24px;
+    backdrop-filter: blur(5px);
 }
-
-.legal-checkbox-container input {
-    margin-top: 4px;
-    accent-color: var(--accent-orange);
-    cursor: pointer;
-}
-
-.legal-checkbox-container label {
-    font-size: 12px;
-    color: var(--text-muted);
-    line-height: 1.4;
-}
-
-.legal-link {
+.metric-data {
     color: var(--cyber-blue);
-    text-decoration: underline;
-    cursor: pointer;
+    font-size: 20px;
+    margin-bottom: 10px;
 }
-
-/* Botón deshabilitado hasta aceptar términos */
-.cta-primary {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    text-align: center;
+.mono {
+    font-family: var(--font-data);
+    font-size: 36px;
+    font-weight: 700;
 }
-
-.cta-primary.disabled {
-    background-color: #333;
-    color: #666;
-    cursor: not-allowed;
-    box-shadow: none;
-    transform: none;
+.metric-name {
+    font-family: var(--font-display);
+    font-size: 22px;
+    letter-spacing: 1px;
+    margin-bottom: 8px;
+}
+.metric-desc {
+    font-size: 14px;
+    color: var(--text-muted);
 }
 
 /* FOOTER LEGAL */
@@ -100,7 +268,6 @@ input[type="file"] {
     flex-direction: column;
     align-items: center;
     gap: 15px;
-    margin-top: 40px;
 }
 
 .footer-links {
@@ -137,7 +304,7 @@ input[type="file"] {
     border: 1px solid var(--cyber-blue);
     padding: 16px 24px;
     border-radius: 12px;
-    display: none; /* Manejado por JS */
+    display: none;
     align-items: center;
     justify-content: space-between;
     gap: 20px;
@@ -182,7 +349,7 @@ input[type="file"] {
     height: 100vh;
     background: rgba(0, 0, 0, 0.8);
     backdrop-filter: blur(5px);
-    display: none; /* Manejado por JS */
+    display: none;
     justify-content: center;
     align-items: center;
     z-index: 2000;
@@ -197,7 +364,7 @@ input[type="file"] {
     max-width: 600px;
     max-height: 80vh;
     overflow-y: auto;
-    display: none; /* Manejado por JS */
+    display: none;
 }
 
 .modal-header {
@@ -247,4 +414,27 @@ input[type="file"] {
 
 .modal-body li {
     margin-bottom: 8px;
+}
+
+/* DESKTOP SCALING */
+@media (min-width: 768px) {
+    .hero {
+        flex-direction: row;
+        align-items: center;
+        justify-content: space-between;
+        padding: 80px 10%;
+    }
+    .hero-content {
+        text-align: left;
+        align-items: flex-start;
+        max-width: 50%;
+    }
+    .hero-title { font-size: 80px; }
+    
+    .frictionless, .metrics-grid {
+        flex-direction: row;
+        justify-content: center;
+        padding: 80px 10%;
+    }
+    .deep-dive { padding: 80px 10%; }
 }
