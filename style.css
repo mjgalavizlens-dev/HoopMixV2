@@ -1,239 +1,343 @@
-/* Paleta de colores Premium Deportiva */
+/* VARIABLES KINETIC MINIMALISMO TÉCNICO */
 :root {
-    --bg-main: #f8fafc; /* Gris hiper claro, casi blanco */
-    --bg-card: #ffffff; /* Blanco puro para las tarjetas */
-    --border-color: #e2e8f0;
-    --accent-orange: #e65c00; /* Naranja baloncesto */
-    --accent-hover: #cc5200;
-    --text-primary: #0f172a; /* Negro suave */
-    --text-secondary: #64748b;
-    --success-green: #059669;
+    --bg-asphalt: #0b0e14;
+    --bg-panel: #131821;
+    --accent-orange: #ff4a00;
+    --accent-orange-hover: #e04200;
+    --cyber-blue: #00f0ff;
+    --text-pure: #ffffff;
+    --text-muted: #8b9bb4;
+    --success-green: #00ff88;
+    --error-red: #ff3366;
+    
+    --font-display: 'Teko', sans-serif;
+    --font-body: 'Inter', sans-serif;
+    --font-data: 'Roboto Mono', monospace;
 }
 
 * {
-    box-sizing: border-box;
     margin: 0;
     padding: 0;
+    box-sizing: border-box;
 }
 
 body {
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-    background-color: var(--bg-main);
-    color: var(--text-primary);
-    line-height: 1.5;
-    padding: 16px;
-    display: flex;
-    justify-content: center;
+    background-color: var(--bg-asphalt);
+    color: var(--text-pure);
+    font-family: var(--font-body);
+    -webkit-font-smoothing: antialiased;
+    overflow-x: hidden;
 }
 
-.app-container {
-    max-width: 600px; 
-    width: 100%;
-    display: flex;
-    flex-direction: column;
-    gap: 24px;
-}
-
-/* Header y Logo */
-.header {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 12px;
-    padding: 10px 0 20px 0;
-}
-
-.brand-logo {
-    max-width: 240px; /* Tamaño perfecto para que se lea Hoop Mix */
-    height: auto;
-    display: block;
-}
-
-.privacy-badge {
-    background-color: #ecfdf5;
-    color: var(--success-green);
-    border: 1px solid #a7f3d0;
-    padding: 6px 14px;
-    border-radius: 20px;
-    font-size: 12px;
-    font-weight: 600;
-}
-
-/* Tarjeta de Instrucciones */
-.instructions-card {
-    background-color: var(--bg-card);
-    border: 1px solid var(--border-color);
-    border-radius: 16px;
+/* NAVBAR */
+.navbar {
     padding: 20px;
-    box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.05); /* Sombra estilo app nativa */
-}
-
-.instructions-card h3 {
-    font-size: 14px;
-    color: var(--text-secondary);
-    margin-bottom: 16px;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-}
-
-.tips-grid {
-    display: flex;
-    flex-direction: column;
-    gap: 16px;
-}
-
-.tip-item {
-    display: flex;
-    align-items: flex-start;
-    gap: 12px;
-    font-size: 14px;
-}
-
-.tip-icon {
-    font-size: 20px;
-    background: var(--bg-main);
-    padding: 8px;
-    border-radius: 10px;
-}
-
-.tip-item strong {
-    color: var(--text-primary);
-    display: block;
-    margin-bottom: 2px;
-}
-
-.tip-item p {
-    color: var(--text-secondary);
-    font-size: 13px;
-}
-
-/* Sección de Subida */
-.upload-section {
     text-align: center;
+    border-bottom: 1px solid rgba(255,255,255,0.05);
 }
-
-input[type="file"] {
-    display: none;
+.logo {
+    font-family: var(--font-display);
+    font-size: 32px;
+    letter-spacing: 1px;
 }
-
-.upload-btn {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    width: 100%;
-    min-height: 56px;
-    background-color: var(--accent-orange);
-    color: white;
-    font-weight: 700;
-    font-size: 16px;
-    border-radius: 12px;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    box-shadow: 0 4px 14px rgba(230, 92, 0, 0.25);
-}
-
-.upload-btn:hover {
-    background-color: var(--accent-hover);
-    transform: translateY(-1px);
-}
-
-.upload-btn:active {
-    transform: translateY(1px);
-}
-
-.status-msg {
-    margin-top: 12px;
-    font-size: 13px;
-    font-weight: 600;
-    color: var(--text-secondary);
-}
-
-/* Reproductor / Canvas */
-.video-section {
-    display: flex;
-    justify-content: center;
-}
-
-.canvas-wrapper {
-    width: 100%;
-    background-color: #000000;
-    border-radius: 16px;
-    overflow: hidden;
-    box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1);
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    min-height: 240px;
-}
-
-canvas {
-    width: 100% !important;
-    height: auto !important;
-    max-height: 600px;
-    object-fit: contain;
-    display: block;
-}
-
-/* Tarjetas de Métricas */
-.metrics-section h2 {
-    font-size: 18px;
-    font-weight: 800;
-    margin-bottom: 16px;
-    color: var(--text-primary);
-    text-align: center;
-}
-
-.metrics-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-    gap: 16px;
-}
-
-.metric-card {
-    background-color: var(--bg-card);
-    border: 1px solid var(--border-color);
-    border-radius: 16px;
-    padding: 20px;
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-    box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.03);
-}
-
-.card-header {
-    display: flex;
-    flex-direction: column;
-}
-
-.metric-title {
-    font-size: 14px;
-    font-weight: 700;
-    color: var(--text-primary);
-}
-
-.metric-subtitle {
-    font-size: 12px;
-    color: var(--text-secondary);
-    margin-top: 2px;
-}
-
-.metric-value {
-    font-size: 36px;
-    font-weight: 900;
+.logo span {
     color: var(--accent-orange);
-    margin: 12px 0;
-    letter-spacing: -1px;
 }
 
-.metric-feedback {
-    font-size: 13px;
-    color: var(--text-secondary);
-    line-height: 1.4;
-    font-weight: 500;
+/* TIPOGRAFÍA GLOBAL */
+.section-heading {
+    font-family: var(--font-display);
+    font-size: 42px;
+    letter-spacing: 1px;
+    text-align: center;
+    margin-bottom: 30px;
+    color: var(--text-pure);
 }
 
-@media (max-width: 480px) {
-    .metrics-grid {
-        grid-template-columns: 1fr; 
+/* HERO (MOBILE FIRST) */
+.hero {
+    display: flex;
+    flex-direction: column;
+    padding: 40px 20px;
+    gap: 40px;
+}
+.hero-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    z-index: 2;
+}
+.hero-title {
+    font-family: var(--font-display);
+    font-size: 56px;
+    line-height: 0.9;
+    letter-spacing: 0px;
+    margin-bottom: 15px;
+}
+.hero-title .highlight {
+    color: var(--accent-orange);
+}
+.hero-subtitle {
+    font-size: 16px;
+    color: var(--text-muted);
+    margin-bottom: 30px;
+    line-height: 1.5;
+}
+.cta-primary {
+    background-color: var(--accent-orange);
+    color: #000;
+    border: none;
+    padding: 18px 32px;
+    font-family: var(--font-display);
+    font-size: 24px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    cursor: pointer;
+    transition: transform 0.2s, background 0.2s;
+    width: 100%;
+    max-width: 350px;
+}
+.cta-primary:active {
+    transform: scale(0.98);
+}
+
+/* MOCKUP 9:16 Y MICRO-INTERACCIONES */
+.hero-visual {
+    display: flex;
+    justify-content: center;
+}
+.mockup-phone {
+    width: 280px;
+    height: 560px;
+    background: #000;
+    border: 8px solid #222;
+    border-radius: 30px;
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 20px 50px rgba(0,0,0,0.5), 0 0 40px rgba(0, 240, 255, 0.1);
+}
+.mockup-screen {
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(45deg, #111, #222); /* Placeholder for video */
+    position: relative;
+}
+.overlay-skeleton {
+    position: absolute;
+    top: 30%;
+    left: 40%;
+    width: 2px;
+    height: 100px;
+    background: var(--cyber-blue);
+    transform: rotate(15deg);
+    box-shadow: 0 0 10px var(--cyber-blue);
+}
+.data-tag {
+    position: absolute;
+    background: rgba(0, 240, 255, 0.15);
+    border: 1px solid var(--cyber-blue);
+    color: var(--cyber-blue);
+    font-family: var(--font-data);
+    font-size: 12px;
+    padding: 4px 8px;
+    backdrop-filter: blur(4px);
+    animation: breathe 3s ease-in-out infinite;
+}
+.tag-1 { top: 25%; left: 10%; }
+.tag-2 { top: 45%; right: 10%; animation-delay: 1.5s; }
+
+@keyframes breathe {
+    0%, 100% { transform: translateY(0); box-shadow: 0 0 5px rgba(0,240,255,0.2); }
+    50% { transform: translateY(-5px); box-shadow: 0 0 15px rgba(0,240,255,0.6); }
+}
+
+/* THE FRICTIONLESS EXPERIENCE */
+.frictionless {
+    padding: 60px 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+.feature-card {
+    background: var(--bg-panel);
+    padding: 24px;
+    border-left: 3px solid var(--accent-orange);
+}
+.feature-icon {
+    font-size: 32px;
+    margin-bottom: 12px;
+}
+.feature-title {
+    font-family: var(--font-display);
+    font-size: 24px;
+    letter-spacing: 1px;
+    margin-bottom: 8px;
+}
+.feature-text {
+    font-size: 14px;
+    color: var(--text-muted);
+    line-height: 1.5;
+}
+
+/* DEEP DIVE: NASA DASHBOARD STYLE */
+.deep-dive {
+    padding: 60px 20px;
+    background: linear-gradient(180deg, var(--bg-asphalt) 0%, #080b10 100%);
+    background-image: linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px);
+    background-size: 40px 40px;
+}
+.metrics-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+.metric-panel {
+    background: rgba(19, 24, 33, 0.8);
+    border: 1px solid rgba(255,255,255,0.05);
+    padding: 24px;
+    backdrop-filter: blur(5px);
+}
+.metric-data {
+    color: var(--cyber-blue);
+    font-size: 20px;
+    margin-bottom: 10px;
+}
+.mono {
+    font-family: var(--font-data);
+    font-size: 36px;
+    font-weight: 700;
+}
+.metric-name {
+    font-family: var(--font-display);
+    font-size: 22px;
+    letter-spacing: 1px;
+    margin-bottom: 8px;
+}
+.metric-desc {
+    font-size: 14px;
+    color: var(--text-muted);
+}
+
+/* TRANSPARENCIA (DO'S AND DON'TS) */
+.transparency {
+    padding: 60px 20px;
+}
+.dos-donts-container {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+.rule-card {
+    padding: 24px;
+    border: 1px solid rgba(255,255,255,0.1);
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+.rule-icon {
+    font-size: 24px;
+    font-weight: bold;
+}
+.success { color: var(--success-green); }
+.error { color: var(--error-red); }
+.rule-title {
+    font-family: var(--font-display);
+    font-size: 22px;
+}
+.rule-text {
+    font-size: 14px;
+    color: var(--text-muted);
+}
+
+/* ROADMAP (GLASSMORPHISM) */
+.roadmap {
+    padding: 60px 20px;
+}
+.roadmap-timeline {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+.roadmap-item {
+    background: rgba(255,255,255,0.02);
+    border: 1px solid rgba(255,255,255,0.05);
+    padding: 16px 20px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    backdrop-filter: blur(10px);
+}
+.status-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: #333;
+}
+.live {
+    background: var(--success-green);
+    box-shadow: 0 0 10px var(--success-green);
+}
+.roadmap-text {
+    font-size: 14px;
+    font-weight: 600;
+}
+
+/* FINAL CTA */
+.final-cta {
+    background: var(--accent-orange);
+    padding: 80px 20px;
+    text-align: center;
+    color: #000;
+}
+.cta-heading {
+    font-family: var(--font-display);
+    font-size: 48px;
+    line-height: 1;
+    margin-bottom: 15px;
+}
+.cta-sub {
+    font-size: 18px;
+    font-weight: 600;
+    margin-bottom: 30px;
+}
+.cta-massive {
+    background: #000;
+    color: var(--accent-orange);
+    border: none;
+    padding: 20px 40px;
+    font-family: var(--font-display);
+    font-size: 28px;
+    cursor: pointer;
+    width: 100%;
+    max-width: 400px;
+    transition: transform 0.2s;
+}
+.cta-massive:active {
+    transform: scale(0.98);
+}
+
+/* DESKTOP SCALING */
+@media (min-width: 768px) {
+    .hero {
+        flex-direction: row;
+        align-items: center;
+        justify-content: space-between;
+        padding: 80px 10%;
     }
+    .hero-content {
+        text-align: left;
+        align-items: flex-start;
+        max-width: 50%;
+    }
+    .hero-title { font-size: 80px; }
+    .frictionless, .dos-donts-container, .metrics-grid {
+        flex-direction: row;
+        justify-content: center;
+        padding: 80px 10%;
+    }
+    .deep-dive { padding: 80px 10%; }
+    .transparency, .roadmap { padding: 80px 20%; }
 }
