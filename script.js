@@ -1,26 +1,39 @@
+// VARIABLES DOM
 const videoElement = document.getElementById('input_video');
 const canvasElement = document.getElementById('output_canvas');
 const canvasCtx = canvasElement.getContext('2d');
-const uploadInput = document.getElementById('video-upload');
+const fileInput = document.getElementById('video-upload');
 const statusText = document.getElementById('status-text');
 
-let minAngle = 180;
-let maxAngle = 0;
-let highestAnkleY = 1.0;
-let lowestAnkleY = 0.0;
-let isAiReady = false;
+const progressBar = document.getElementById('progress-bar');
+const progressContainer = document.getElementById('progress-container');
+const progressPercent = document.getElementById('progress-percent');
 
-function calculateAngle(a, b, c) {
-    let radians = Math.atan2(c.y - b.y, c.x - b.x) - Math.atan2(a.y - b.y, a.x - b.x);
-    let angle = Math.abs(radians * 180.0 / Math.PI);
-    if (angle > 180.0) angle = 360.0 - angle;
+const minAngleVal = document.getElementById('min-angle-val');
+const maxAngleVal = document.getElementById('max-angle-val');
+const jumpVal = document.getElementById('jump-val');
+
+const coachCard = document.getElementById('coach-card');
+const coachAdvice = document.getElementById('coach-advice');
+
+// METRICAS ACUMULADAS
+let minElbowAngle = 180;
+let maxElbowAngle = 0;
+let minYHip = 10000;
+let maxYHip = 0;
+
+// MEDIDA ÁNGULO BIOMECÁNICO
+function calculateAngle(A, B, C) {
+    let radians = Math.atan2(C.y - B.y, C.x - B.x) - Math.atan2(A.y - B.y, A.x - B.x);
+    let angle = Math.abs((radians * 180.0) / Math.PI);
+    if (angle > 180.0) angle = 360 - angle;
     return angle;
 }
 
-// Inicializar MediaPipe Pose
-const pose = new Pose({locateFile: (file) => {
-    return `https://cdn.jsdelivr.net/npm/@mediapipe/pose/${file}`;
-}});
+// CONFIGURACIÓN DE MEDIAPIPE POSE
+const pose = new Pose({
+    locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/pose/${file}`
+});
 
 pose.setOptions({
     modelComplexity: 1,
@@ -29,90 +42,136 @@ pose.setOptions({
     minTrackingConfidence: 0.5
 });
 
-// Confirmar que la IA ha cargado
-pose.initialize().then(() => {
-    isAiReady = true;
-    statusText.innerText = "✅ IA lista. Sube tu vídeo cuando quieras.";
-    statusText.style.color = "#00FF00";
-}).catch(err => {
-    statusText.innerText = "⚠️ Si estás abriendo el archivo en local, súbelo a Vercel para que cargue la IA.";
-});
+pose.onResults(onResults);
 
-pose.onResults((results) => {
+function onResults(results) {
     canvasCtx.save();
     canvasCtx.clearRect(0, 0, canvasElement.width, canvasElement.height);
     canvasCtx.drawImage(results.image, 0, 0, canvasElement.width, canvasElement.height);
 
     if (results.poseLandmarks) {
-        drawConnectors(canvasCtx, results.poseLandmarks, POSE_CONNECTIONS, {color: '#00FF00', lineWidth: 3});
-        drawLandmarks(canvasCtx, results.poseLandmarks, {color: '#FF0000', lineWidth: 2, radius: 3});
+        // Dibujar Esqueleto Biomecánico
+        drawConnectors(canvasCtx, results.poseLandmarks, POSE_CONNECTIONS, { color: '#00F0FF', lineWidth: 3 });
+        drawLandmarks(canvasCtx, results.poseLandmarks, { color: '#FF4A00', lineWidth: 2, radius: 4 });
 
-        const shoulder = results.poseLandmarks[12];
-        const elbow = results.poseLandmarks[14];
-        const wrist = results.poseLandmarks[16];
-        const ankle = results.poseLandmarks[28];
+        const landmarks = results.poseLandmarks;
+        const shoulder = landmarks[12];
+        const elbow = landmarks[14];
+        const wrist = landmarks[16];
+        const hip = landmarks[24];
 
         if (shoulder && elbow && wrist) {
-            let angle = calculateAngle(shoulder, elbow, wrist);
-            if (angle < minAngle) minAngle = angle;
-            if (angle > maxAngle) maxAngle = angle;
-
-            document.getElementById('min-angle-val').innerText = `${Math.round(minAngle)}°`;
-            document.getElementById('max-angle-val').innerText = `${Math.round(maxAngle)}°`;
+            const currentAngle = calculateAngle(shoulder, elbow, wrist);
+            if (currentAngle < minElbowAngle) minElbowAngle = Math.round(currentAngle);
+            if (currentAngle > maxElbowAngle) maxElbowAngle = Math.round(currentAngle);
             
-            if (minAngle < 70) document.getElementById('min-angle-msg').innerText = "Codo muy cerrado (<70°).";
-            else if (minAngle <= 100) document.getElementById('min-angle-msg').innerText = "Buen ángulo de carga.";
-            else document.getElementById('min-angle-msg').innerText = "Carga muy abierta.";
-
-            if (maxAngle >= 155) document.getElementById('max-angle-msg').innerText = "Excelente extensión.";
-            else document.getElementById('max-angle-msg').innerText = "Falta extensión final.";
+            minAngleVal.innerText = `${minElbowAngle}°`;
+            maxAngleVal.innerText = `${maxElbowAngle}°`;
         }
 
-        if (ankle) {
-            if (ankle.y > lowestAnkleY) lowestAnkleY = ankle.y;
-            if (ankle.y < highestAnkleY) highestAnkleY = ankle.y;
+        if (hip) {
+            const yPos = hip.y * canvasElement.height;
+            if (yPos < minYHip) minYHip = yPos;
+            if (yPos > maxYHip) maxYHip = yPos;
             
-            let diff = lowestAnkleY - highestAnkleY;
-            if (diff > 0.05) {
-                let estimatedCm = Math.round(diff * 150);
-                document.getElementById('jump-val').innerText = `~${estimatedCm} cm`;
-                document.getElementById('jump-msg').innerText = estimatedCm > 40 ? "Buena elevación" : "Elevación baja";
-            }
+            const verticalDelta = Math.round(maxYHip - minYHip);
+            jumpVal.innerText = verticalDelta;
         }
     }
     canvasCtx.restore();
-});
+}
 
-uploadInput.addEventListener('change', (event) => {
-    const file = event.target.files[0];
+// PROCESAMIENTO DE VÍDEO CON BARRA DE PROGRESO REAL
+fileInput.addEventListener('change', (e) => {
+    const file = e.target.files[0];
     if (!file) return;
 
-    minAngle = 180;
-    maxAngle = 0;
-    highestAnkleY = 1.0;
-    lowestAnkleY = 0.0;
+    statusText.innerText = "Cargando archivo...";
+    progressContainer.style.display = "block";
+    progressBar.style.width = "0%";
+    progressPercent.innerText = "0%";
+    coachCard.style.display = "none";
 
-    statusText.innerText = "⏳ Procesando biomecánica del vídeo...";
-    statusText.style.color = "#ff4b4b";
+    // Reseteo de Métricas
+    minElbowAngle = 180;
+    maxElbowAngle = 0;
+    minYHip = 10000;
+    maxYHip = 0;
 
     const url = URL.createObjectURL(file);
     videoElement.src = url;
-    videoElement.muted = true; // Fuerza el silencio para saltarse el bloqueo del navegador
-    
-    videoElement.onloadeddata = () => {
+
+    videoElement.onloadedmetadata = () => {
         canvasElement.width = videoElement.videoWidth;
         canvasElement.height = videoElement.videoHeight;
-        videoElement.play();
-        procesarLoop();
+        statusText.innerText = "Analizando fotogramas...";
+        processVideo();
     };
 });
 
-async function procesarLoop() {
-    if (!videoElement.paused && !videoElement.ended) {
-        await pose.send({image: videoElement});
-        requestAnimationFrame(procesarLoop);
-    } else if (videoElement.ended) {
-        statusText.innerText = "✅ ¡Análisis completado con éxito!";
-        statusText.style.color = "#00FF00";
+async function processVideo() {
+    videoElement.currentTime = 0;
+    const duration = videoElement.duration;
+
+    function step() {
+        if (videoElement.currentTime < duration) {
+            pose.send({ image: videoElement });
+
+            // Actualizar Línea de Carga
+            const progress = Math.round((videoElement.currentTime / duration) * 100);
+            progressBar.style.width = `${progress}%`;
+            progressPercent.innerText = `${progress}%`;
+
+            videoElement.currentTime += 0.08; // Avanzar fotogramas
+            requestAnimationFrame(step);
+        } else {
+            // Finalizado
+            progressBar.style.width = "100%";
+            progressPercent.innerText = "100%";
+            statusText.innerText = "Análisis completado";
+            generateCoachAdvice();
+        }
+    }
+    step();
+}
+
+// GENERADOR DE CONSEJOS DE ENTRENADOR DE ÉLITE
+function generateCoachAdvice() {
+    coachCard.style.display = "block";
+    
+    if (typeof currentMode === 'undefined' || currentMode === 'shot') {
+        // CONSEJOS DE TIRO
+        let feedback = "";
+        
+        if (minElbowAngle < 75) {
+            feedback = "<strong>Punto de Carga Muy Cerrado:</strong> Estás colapsando demasiado el codo en la preparación. Esto genera tensión innecesaria y frena la fluidez de liberación. Abre ligeramente la preparación para mantener una catapulta limpia.";
+        } else if (minElbowAngle > 105) {
+            feedback = "<strong>Tiro Empujado:</strong> Tu punto de carga supera los 100°. Estás empujando el balón desde el pecho hacia adelante en vez de acompañar la trayectoria vertical. Eleva el balón justo por encima de tu ceja dominante antes de soltar.";
+        } else {
+            feedback = "<strong>Mecánica de Carga Excelente:</strong> Tu ángulo de preparación está en la zona dulce de tiro rápido. Mantienes una palanca equilibrada entre fuerza y velocidad.";
+        }
+
+        if (maxElbowAngle < 155) {
+            feedback += " Además, <strong>no estás terminando la extensión:</strong> Cortas el seguimiento con la muñeca antes de tiempo. Mantén el brazo extendido y la 'mano en el aro' hasta que el balón toque la red.";
+        } else {
+            feedback += " <strong>Excelente seguimiento (Follow-through):</strong> Tu brazo se extiende completamente asegurando una parábola suave.";
+        }
+
+        coachAdvice.innerHTML = feedback;
+
+    } else {
+        // CONSEJOS DE SALTO VERTICAL
+        const delta = Math.round(maxYHip - minYHip);
+        let feedback = "";
+
+        if (delta < 50) {
+            feedback = "<strong>Pérdida de Transmisión de Fuerza:</strong> La carga es demasiado rígida. Flexiona caderas y rodillas de manera más dinámica antes del despegue para convertir la energía elástica del suelo en elevación pura.";
+        } else if (delta < 120) {
+            feedback = "<strong>Buen Muelle Base:</strong> Flexión adecuada. Para ganar centímetros extra, enfócate en acelerar la velocidad del último paso (plant-step) y coordinar el balanceo de brazos hacia arriba justo antes del despegue.";
+        } else {
+            feedback = "<strong>Potencia Explosiva Brutal:</strong> Gran transferencia de triple extensión (tobillo, rodilla y cadera). Mantén la fluidez de entrada para no perder velocidad horizontal en los pasos previos.";
+        }
+
+        coachAdvice.innerHTML = feedback;
     }
 }
