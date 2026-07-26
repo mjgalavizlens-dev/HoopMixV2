@@ -94,20 +94,25 @@
         <h2 class="section-heading">MÉTRICAS & DIAGNÓSTICO</h2>
         
         <div class="metrics-grid">
-            <div class="metric-panel">
+            <!-- PANEL 1: Carga (Se oculta en Salto) -->
+            <div class="metric-panel" id="panel-carga">
                 <div class="metric-data">∠ <span class="mono" id="min-angle-val">--°</span></div>
                 <h4 class="metric-name" id="label-metric-1">PUNTO DE CARGA</h4>
                 <p class="metric-desc" id="min-angle-msg">Ángulo del codo en la preparación del tiro.</p>
             </div>
-            <div class="metric-panel">
+            
+            <!-- PANEL 2: Extensión (Se oculta en Salto) -->
+            <div class="metric-panel" id="panel-extension">
                 <div class="metric-data">∠ <span class="mono" id="max-angle-val">--°</span></div>
                 <h4 class="metric-name" id="label-metric-2">EXTENSIÓN FINAL</h4>
                 <p class="metric-desc" id="max-angle-msg">Apertura en la liberación del balón.</p>
             </div>
-            <div class="metric-panel">
-                <div class="metric-data">PX <span class="mono" id="jump-val">--</span></div>
+            
+            <!-- PANEL 3: Salto Vertical (Siempre visible, calibrado en CM) -->
+            <div class="metric-panel" id="panel-salto">
+                <div class="metric-data"><span class="mono" id="jump-val">--</span> <span style="font-size: 16px;">CM</span></div>
                 <h4 class="metric-name">ELEVACIÓN VERTICAL</h4>
-                <p class="metric-desc" id="jump-msg">Desplazamiento vertical del centro de masa.</p>
+                <p class="metric-desc" id="jump-msg">Estimación antropométrica del salto neto.</p>
             </div>
         </div>
 
@@ -161,7 +166,7 @@
             </div>
             <div class="modal-body">
                 <h3>1. Naturaleza del Servicio</h3>
-                <p>Herramienta con fines deportivos y formativos. Las métricas son estimaciones algorítmicas.</p>
+                <p>Herramienta con fines deportivos y formativos. Las métricas son estimaciones algorítmicas mediante proporciones antropométricas y pueden presentar márgenes de error dependiendo del ángulo de grabación.</p>
                 <h3>2. Exención de Responsabilidad Médica</h3>
                 <p>No es un dispositivo médico. El usuario asume la responsabilidad sobre la ejecución de sus ejercicios.</p>
             </div>
@@ -184,26 +189,29 @@
     <script>
         let currentMode = 'shot';
 
+        // LÓGICA PARA MOSTRAR/OCULTAR PANELES SEGÚN EL MODO
         function setAnalysisMode(mode) {
             currentMode = mode;
             const btnShot = document.getElementById('btn-mode-shot');
             const btnJump = document.getElementById('btn-mode-jump');
             const uploadLabel = document.getElementById('upload-label');
-            const label1 = document.getElementById('label-metric-1');
-            const label2 = document.getElementById('label-metric-2');
+            const panelCarga = document.getElementById('panel-carga');
+            const panelExtension = document.getElementById('panel-extension');
 
             if(mode === 'shot') {
                 btnShot.classList.add('active');
                 btnJump.classList.remove('active');
                 uploadLabel.innerText = 'ANALIZAR MI TIRO';
-                label1.innerText = 'PUNTO DE CARGA';
-                label2.innerText = 'EXTENSIÓN FINAL';
+                // Mostrar los paneles de tiro
+                panelCarga.style.display = 'block';
+                panelExtension.style.display = 'block';
             } else {
                 btnJump.classList.add('active');
                 btnShot.classList.remove('active');
                 uploadLabel.innerText = 'ANALIZAR MI SALTO';
-                label1.innerText = 'FLEXIÓN PREVIA';
-                label2.innerText = 'EXTENSIÓN EN DESPEGUE';
+                // Ocultar los paneles de tiro, dejando solo el de salto
+                panelCarga.style.display = 'none';
+                panelExtension.style.display = 'none';
             }
         }
 
