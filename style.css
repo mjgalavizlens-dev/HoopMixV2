@@ -1,0 +1,94 @@
+body {
+    font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    background-color: #0e1117;
+    color: #ffffff;
+    margin: 0;
+    padding: 20px;
+    display: flex;
+    justify-content: center;
+}
+
+.container {
+    max-width: 800px;
+    width: 100%;
+    text-align: center;
+}
+
+h1 {
+    color: #ff4b4b;
+    margin-bottom: 5px;
+}
+
+.subtitle {
+    color: #a0aab2;
+    margin-bottom: 30px;
+}
+
+/* Botón de subida */
+input[type="file"] {
+    display: none;
+}
+
+.custom-file-upload {
+    display: inline-block;
+    padding: 12px 24px;
+    cursor: pointer;
+    background-color: #ff4b4b;
+    color: white;
+    border-radius: 8px;
+    font-weight: bold;
+    transition: 0.3s;
+    margin-bottom: 20px;
+}
+
+.custom-file-upload:hover {
+    background-color: #ff3333;
+}
+
+/* Contenedor del vídeo */
+.video-container {
+    background-color: #262730;
+    border-radius: 10px;
+    padding: 10px;
+    margin-bottom: 30px;
+    display: flex;
+    justify-content: center;
+    overflow: hidden;
+}
+
+canvas {
+    max-width: 100%;
+    height: auto;
+    border-radius: 8px;
+}
+
+/* Tarjetas de métricas */
+.metrics-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 20px;
+}
+
+.metric-card {
+    background-color: #262730;
+    padding: 20px;
+    border-radius: 10px;
+    border: 1px solid #4a4d56;
+}
+
+.metric-card h3 {
+    margin-top: 0;
+    font-size: 16px;
+    color: #a0aab2;
+}
+
+.metric-card p {
+    font-size: 32px;
+    font-weight: bold;
+    margin: 10px 0;
+    color: #fff;
+}
+
+.metric-card small {
+    color: #ff4b4b;
+}

@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HoopsAI - Análisis Biomecánico V2</title>
+    <link rel="stylesheet" href="style.css">
+    
+    <!-- Librerías de MediaPipe -->
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/control_utils/control_utils.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/pose/pose.js" crossorigin="anonymous"></script>
+</head>
+<body>
+    <div class="container">
+        <h1>🏀 HoopsAI V2</h1>
+        <p class="subtitle">Análisis Biomecánico Instantáneo</p>
+        
+        <div class="upload-section">
+            <label for="video-upload" class="custom-file-upload">
+                Subir Vídeo de Tiro (MP4/MOV)
+            </label>
+            <input type="file" id="video-upload" accept="video/mp4,video/mov,video/webm">
+            <!-- Texto de estado para saber qué está haciendo la IA -->
+            <p id="status-text" style="color: #ff4b4b; font-weight: bold; margin-top: 10px;">Cargando motor de Inteligencia Artificial...</p>
+        </div>
+
+        <div class="video-container">
+            <!-- Añadido muted y playsinline para evitar que el navegador bloquee la reproducción -->
+            <video id="input_video" playsinline muted style="display:none;"></video>
+            <canvas id="output_canvas" width="640" height="480"></canvas>
+        </div>
+
+        <div class="metrics-grid">
+            <div class="metric-card">
+                <h3>Punto de Carga (Set Point)</h3>
+                <p id="min-angle-val">--°</p>
+                <small id="min-angle-msg">Sube un vídeo para analizar</small>
+            </div>
+            <div class="metric-card">
+                <h3>Extensión (Follow-through)</h3>
+                <p id="max-angle-val">--°</p>
+                <small id="max-angle-msg">Sube un vídeo para analizar</small>
+            </div>
+            <div class="metric-card">
+                <h3>Elevación Relativa</h3>
+                <p id="jump-val">--</p>
+                <small id="jump-msg">Análisis de salto vertical</small>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
