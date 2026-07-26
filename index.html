@@ -4,12 +4,14 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Hoop Mix | Analítica Biomecánica de Élite</title>
+    
+    <!-- Tipografías: Teko (Impacto) / Inter (Lectura) / Roboto Mono (Datos) -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&family=Roboto+Mono:wght@500;700&family=Teko:wght@600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
     
-    <!-- Librerías de MediaPipe -->
+    <!-- Librerías de MediaPipe (Procesamiento en navegador) -->
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/control_utils/control_utils.js" crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js" crossorigin="anonymous"></script>
@@ -17,7 +19,7 @@
 </head>
 <body>
 
-    <!-- NAV -->
+    <!-- NAVBAR -->
     <nav class="navbar">
         <div class="logo">HOOP<span>MIX</span></div>
     </nav>
@@ -71,7 +73,7 @@
         <div class="feature-card">
             <div class="feature-icon">🌐</div>
             <h3 class="feature-title">Sin Instalación</h3>
-            <p class="feature-text">Funciona en iOS, Android o PC. Desde Instagram directo a la acción.</p>
+            <p class="feature-text">Funciona en iOS, Android o PC. Desde tus redes directo a la acción.</p>
         </div>
     </section>
 
@@ -82,12 +84,12 @@
             <div class="metric-panel">
                 <div class="metric-data">∠ <span class="mono" id="min-angle-val">--°</span></div>
                 <h4 class="metric-name">PUNTO DE CARGA</h4>
-                <p class="metric-desc" id="min-angle-msg">Sube un vídeo para evaluar tu Set Point.</p>
+                <p class="metric-desc" id="min-angle-msg">Sube un vídeo de perfil para evaluar tu Set Point.</p>
             </div>
             <div class="metric-panel">
                 <div class="metric-data">∠ <span class="mono" id="max-angle-val">--°</span></div>
                 <h4 class="metric-name">EXTENSIÓN FINAL</h4>
-                <p class="metric-desc" id="max-angle-msg">Sube un vídeo para evaluar tu Follow-through.</p>
+                <p class="metric-desc" id="max-angle-msg">Sube un vídeo para medir tu Follow-through en el aire.</p>
             </div>
             <div class="metric-panel">
                 <div class="metric-data">Y <span class="mono" id="jump-val">--</span></div>
@@ -104,10 +106,10 @@
             <span onclick="openModal('modal-privacidad')">Política de Privacidad y IA</span>
             <span onclick="openModal('modal-terminos')">Términos y Condiciones</span>
         </div>
-        <p class="copyright">© 2026 Hoop Mix. Todos los derechos reservados.</p>
+        <p class="copyright">© 2026 Hoop Mix Team. Todos los derechos reservados.</p>
     </footer>
 
-    <!-- BANNER INFORMATIVO DE COOKIES (No intrusivo) -->
+    <!-- BANNER INFORMATIVO DE COOKIES -->
     <div class="cookie-banner" id="cookie-banner">
         <p><strong>Transparencia de Datos:</strong> Hoop Mix utiliza una arquitectura <em>Zero-Data</em>. No utilizamos cookies de rastreo, no almacenamos tus vídeos y no vendemos datos. Tu privacidad está garantizada por diseño.</p>
         <button onclick="closeCookies()">Entendido</button>
@@ -128,8 +130,8 @@
                 <h3>2. Uso de Inteligencia Artificial (MediaPipe Pose)</h3>
                 <p>Nuestra tecnología utiliza modelos de visión por computador pre-entrenados para la inferencia de coordenadas articulares en tiempo real. Este modelo funciona en tu navegador mediante WebAssembly.</p>
                 <ul>
-                    <li><strong>No biometría persistente:</strong> La IA solo detecta puntos clave del esqueleto (Landmarks) fotograma a fotograma. No realiza reconocimiento facial ni almacena patrones biométricos que permitan tu identificación unívoca.</li>
-                    <li><strong>No entrenamiento con tus datos:</strong> Tus vídeos bajo ningún concepto son utilizados para reentrenar o mejorar nuestros algoritmos ni son enviados a servidores de terceros.</li>
+                    <li><strong>No biometría persistente:</strong> La IA solo detecta puntos clave del esqueleto fotograma a fotograma. No realiza reconocimiento facial ni almacena patrones biométricos que permitan tu identificación.</li>
+                    <li><strong>No entrenamiento de terceros:</strong> Tus vídeos bajo ningún concepto son utilizados para reentrenar o mejorar nuestros algoritmos ni son enviados a servidores de terceros.</li>
                 </ul>
             </div>
         </div>
@@ -155,9 +157,10 @@
                 <span class="close-btn" onclick="closeModal()">✕</span>
             </div>
             <div class="modal-body">
-                <p>En cumplimiento con el deber de información recogido en el artículo 10 de la Ley 34/2002, de 11 de julio, de Servicios de la Sociedad de la Información y del Comercio Electrónico (LSSI-CE):</p>
-                <p><strong>Titularidad:</strong> El presente sitio web es propiedad de [TU NOMBRE O EMPRESA], con correo electrónico de contacto: [TU CORREO].</p>
-                <p><strong>Propiedad Intelectual:</strong> Todos los derechos sobre el código fuente, diseño, logotipos y textos pertenecen a Hoop Mix. El uso del motor de MediaPipe se realiza bajo licencia Apache 2.0.</p>
+                <p>En cumplimiento con el deber de información recogido en la legislación vigente de Servicios de la Sociedad de la Información y Comercio Electrónico:</p>
+                <p><strong>Titularidad:</strong> El presente sitio web y la plataforma Hoop Mix son desarrollados y gestionados por <strong>Hoop Mix Team</strong>.</p>
+                <p><strong>Contacto:</strong> Para cualquier consulta, sugerencia o asunto legal, puedes contactar directamente a través del correo electrónico: <strong>officialhoopmix@gmail.com</strong>.</p>
+                <p><strong>Propiedad Intelectual:</strong> Todos los derechos sobre la marca, diseño, interfaz y código fuente pertenecen a Hoop Mix. Los motores de visión por computador utilizados operan bajo sus correspondientes licencias open-source (Apache 2.0).</p>
             </div>
         </div>
 
@@ -207,7 +210,7 @@
         }
     </script>
     
-    <!-- Tu script de la IA (No tocar) -->
+    <!-- Script Principal de la IA -->
     <script src="script.js"></script>
 </body>
 </html>
