@@ -21,6 +21,8 @@ let minElbowAngle = 180;
 let maxElbowAngle = 0;
 let minYHip = 10000;
 let maxYHip = 0;
+let referenceTorsoPx = 0; // Referencia para calibrar píxeles a CM
+let finalJumpCm = 0;
 
 // MEDIDA ÁNGULO BIOMECÁNICO
 function calculateAngle(A, B, C) {
@@ -57,12 +59,12 @@ function onResults(results) {
         drawLandmarks(canvasCtx, results.poseLandmarks, { color: '#FF4A00', lineWidth: 2, radius: 4 });
 
         const landmarks = results.poseLandmarks;
-        const shoulder = landmarks[12];
+        const shoulder = landmarks[12]; // Hombro derecho
         const elbow = landmarks[14];
         const wrist = landmarks[16];
         const hip = landmarks[24]; // Cadera derecha
 
-        // Cálculos de Tiro
+        // 1. Cálculos de Tiro (Ángulos)
         if (shoulder && elbow && wrist) {
             const currentAngle = calculateAngle(shoulder, elbow, wrist);
             if (currentAngle < minElbowAngle) minElbowAngle = Math.round(currentAngle);
@@ -72,14 +74,31 @@ function onResults(results) {
             maxAngleVal.innerText = `${maxElbowAngle}°`;
         }
 
-        // Cálculos de Salto
-        if (hip) {
+        // 2. Calibración Antropométrica (Píxeles a Centímetros)
+        if (shoulder && hip) {
+            // El tamaño del torso en píxeles. Tomamos el más grande para asegurar que el jugador está erguido y visible.
+            const currentTorsoPx = Math.abs(hip.y - shoulder.y) * canvasElement.height;
+            if (currentTorsoPx > referenceTorsoPx) referenceTorsoPx = currentTorsoPx;
+
+            // Rastreamos el punto más alto (minYHip) y el punto más bajo (maxYHip)
             const yPos = hip.y * canvasElement.height;
             if (yPos < minYHip) minYHip = yPos;
             if (yPos > maxYHip) maxYHip = yPos;
             
-            const verticalDelta = Math.round(maxYHip - minYHip);
-            jumpVal.innerText = verticalDelta;
+            const verticalDeltaPx = maxYHip - minYHip;
+
+            // Asumimos un torso adulto promedio de ~50 cm para crear la escala
+            if (referenceTorsoPx > 0) {
+                const cmPerPx = 50 / referenceTorsoPx;
+                finalJumpCm = Math.round(verticalDeltaPx * cmPerPx);
+                
+                // Si el salto es minúsculo, asumimos que no ha saltado
+                if (finalJumpCm < 8 && typeof currentMode !== 'undefined' && currentMode === 'shot') {
+                    jumpVal.innerText = "0"; // Tiro a pie firme
+                } else {
+                    jumpVal.innerText = finalJumpCm;
+                }
+            }
         }
     }
     canvasCtx.restore();
@@ -101,6 +120,9 @@ fileInput.addEventListener('change', (e) => {
     maxElbowAngle = 0;
     minYHip = 10000;
     maxYHip = 0;
+    referenceTorsoPx = 0;
+    finalJumpCm = 0;
+    
     minAngleVal.innerText = `--°`;
     maxAngleVal.innerText = `--°`;
     jumpVal.innerText = `--`;
@@ -119,31 +141,24 @@ fileInput.addEventListener('change', (e) => {
 // PROCESAMIENTO ASÍNCRONO DE VÍDEO (SOLUCIÓN PANTALLA NEGRA)
 async function processVideo() {
     const duration = videoElement.duration;
-    // Empezamos en 0.001s para forzar al navegador a decodificar el primer fotograma
     let currentTime = 0.001; 
-    // Analiza un fotograma cada 0.05 segundos (precisión de grado profesional)
     const frameStep = 0.05; 
 
-    // Este evento se dispara SOLO cuando el fotograma real ya está listo y visible
     videoElement.onseeked = async () => {
         try {
-            // 1. Enviamos el fotograma real a la IA y esperamos a que lo analice
             await pose.send({ image: videoElement });
             
-            // 2. Actualizamos la barra de progreso
             const progress = Math.min(100, Math.round((currentTime / duration) * 100));
             progressBar.style.width = `${progress}%`;
             progressPercent.innerText = `${progress}%`;
 
-            // 3. Avanzamos al siguiente frame o terminamos el análisis
             if (currentTime + frameStep <= duration) {
                 currentTime += frameStep;
-                videoElement.currentTime = currentTime; // Esto vuelve a disparar el onseeked
+                videoElement.currentTime = currentTime; 
             } else if (currentTime < duration) {
                 currentTime = duration;
                 videoElement.currentTime = currentTime;
             } else {
-                // Finalizado
                 progressBar.style.width = "100%";
                 progressPercent.innerText = "100%";
                 statusText.innerText = "Análisis completado";
@@ -155,7 +170,6 @@ async function processVideo() {
         }
     };
 
-    // Arrancamos la cadena de análisis
     videoElement.currentTime = currentTime;
 }
 
@@ -163,7 +177,6 @@ async function processVideo() {
 function generateCoachAdvice() {
     coachCard.style.display = "block";
     
-    // Llama a la variable currentMode definida en el index.html
     const mode = typeof currentMode !== 'undefined' ? currentMode : 'shot';
     
     if (mode === 'shot') {
@@ -183,20 +196,25 @@ function generateCoachAdvice() {
         } else {
             feedback += "<br><br><strong>Excelente seguimiento (Follow-through):</strong> Tu brazo se extiende completamente asegurando una parábola suave.";
         }
+        
+        if (finalJumpCm < 8) {
+            feedback += "<br><br><strong>Biomecánica Base:</strong> El análisis detecta un tiro a pie firme (tiro libre). Tu potencia depende 100% de la cadena cinética de tus piernas hasta tus brazos.";
+        } else {
+            feedback += `<br><br><strong>Tiro en Suspensión:</strong> Has ejecutado el tiro con un salto de aprox. ${finalJumpCm} cm. Asegúrate de soltar el balón en el punto más alto para evitar tapones.`;
+        }
 
         coachAdvice.innerHTML = feedback;
 
     } else {
-        // CONSEJOS DE SALTO VERTICAL
-        const delta = Math.round(maxYHip - minYHip);
+        // CONSEJOS DE SALTO VERTICAL EXCLUSIVOS
         let feedback = "";
 
-        if (delta < 50) {
+        if (finalJumpCm < 20) {
             feedback = "<strong>Pérdida de Transmisión de Fuerza:</strong> La carga es demasiado rígida. Flexiona caderas y rodillas de manera más dinámica antes del despegue para convertir la energía elástica del suelo en elevación pura.";
-        } else if (delta < 120) {
-            feedback = "<strong>Buen Muelle Base:</strong> Flexión adecuada. Para ganar centímetros extra, enfócate en acelerar la velocidad del último paso (plant-step) y coordinar el balanceo de brazos hacia arriba justo antes del despegue.";
+        } else if (finalJumpCm < 45) {
+            feedback = "<strong>Buen Muelle Base:</strong> Tu salto es sólido, pero para ganar centímetros extra enfócate en acelerar la velocidad del último paso (plant-step) y coordinar un balanceo de brazos agresivo hacia arriba justo antes del despegue.";
         } else {
-            feedback = "<strong>Potencia Explosiva Brutal:</strong> Gran transferencia de triple extensión (tobillo, rodilla y cadera). Mantén la fluidez de entrada para no perder velocidad horizontal en los pasos previos.";
+            feedback = `<strong>Potencia Explosiva Brutal (${finalJumpCm} cm):</strong> Gran transferencia de triple extensión (tobillo, rodilla y cadera). Tienes un salto por encima de la media. Mantén tu fluidez de entrada para no perder velocidad horizontal.`;
         }
 
         coachAdvice.innerHTML = feedback;
