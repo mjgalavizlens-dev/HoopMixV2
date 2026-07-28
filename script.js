@@ -11,7 +11,6 @@ const firebaseConfig = {
     measurementId: "G-ZW25Z14CYC"
 };
 
-// Inicializar Firebase
 if (typeof firebase !== 'undefined' && !firebase.apps.length) {
     firebase.initializeApp(firebaseConfig);
 }
@@ -21,162 +20,216 @@ const db = typeof firebase !== 'undefined' ? firebase.firestore() : null;
 let currentUser = null;
 
 // ==========================================
-// 2. VARIABLES DOM
+// 2. GESTIÓN DE SESIÓN DE USUARIO
 // ==========================================
-const videoElement = document.getElementById('input_video');
-const canvasElement = document.getElementById('output_canvas');
-const canvasCtx = canvasElement.getContext('2d');
-const fileInput = document.getElementById('video-upload');
-const statusText = document.getElementById('status-text');
+document.addEventListener('DOMContentLoaded', () => {
+    const loginBtn = document.getElementById('login-btn');
+    const logoutBtn = document.getElementById('logout-btn');
 
-const progressBar = document.getElementById('progress-bar');
-const progressContainer = document.getElementById('progress-container');
-const progressPercent = document.getElementById('progress-percent');
+    if (loginBtn) loginBtn.addEventListener('click', loginWithGoogle);
+    if (logoutBtn) logoutBtn.addEventListener('click', logout);
 
-const minAngleVal = document.getElementById('min-angle-val');
-const maxAngleVal = document.getElementById('max-angle-val');
-const jumpVal = document.getElementById('jump-val');
+    if (auth) {
+        auth.onAuthStateChanged((user) => {
+            currentUser = user;
+            updateUIAuthState(user);
+            if (user) {
+                loadUserHistory();
+            }
+        });
+    }
+});
 
-const coachCard = document.getElementById('coach-card');
-const coachAdvice = document.getElementById('coach-advice');
-
-// Elementos del DOM para Login e Historial
-const loginBtn = document.getElementById('login-btn');
-const logoutBtn = document.getElementById('logout-btn');
-const userInfo = document.getElementById('user-info');
-const userName = document.getElementById('user-name');
-const historyList = document.getElementById('history-list');
-const historySection = document.getElementById('history-section');
-
-// ==========================================
-// 3. MÉTRICAS ACUMULADAS
-// ==========================================
-let minElbowAngle = 180;
-let maxElbowAngle = 0;
-let minYHip = 10000;
-let maxYHip = 0;
-let referenceTorsoPx = 0; // Referencia para calibrar píxeles a CM
-let finalJumpCm = 0;
-
-// ==========================================
-// 4. AUTENTICACIÓN CON GOOGLE Y FIRESTORE
-// ==========================================
-if (auth) {
-    // Escuchar estado de sesión del usuario
-    auth.onAuthStateChanged((user) => {
-        currentUser = user;
-        if (user) {
-            if (userName) userName.innerText = user.displayName || user.email;
-            if (loginBtn) loginBtn.style.display = 'none';
-            if (userInfo) userInfo.style.display = 'flex';
-            if (historySection) historySection.style.display = 'block';
-            loadJumpHistory(user.uid);
-        } else {
-            if (loginBtn) loginBtn.style.display = 'block';
-            if (userInfo) userInfo.style.display = 'none';
-            if (historySection) historySection.style.display = 'none';
-        }
-    });
-}
-
-// Iniciar Sesión con Google
 function loginWithGoogle() {
     if (!auth) return;
     const provider = new firebase.auth.GoogleAuthProvider();
     auth.signInWithPopup(provider).catch((error) => {
-        console.error("Error al iniciar sesión con Google:", error);
+        console.error("Error al iniciar sesión:", error.message);
     });
 }
 
-// Cerrar Sesión
 function logout() {
     if (!auth) return;
     auth.signOut().then(() => {
-        if (historyList) historyList.innerHTML = '';
+        currentUser = null;
+        updateUIAuthState(null);
     });
 }
 
-// Event Listeners para Auth
-if (loginBtn) loginBtn.addEventListener('click', loginWithGoogle);
-if (logoutBtn) logoutBtn.addEventListener('click', logout);
+function updateUIAuthState(user) {
+    const loginBtn = document.getElementById('login-btn');
+    const userInfo = document.getElementById('user-info');
+    const userName = document.getElementById('user-name');
+    const btnShowHistory = document.getElementById('btn-show-history');
 
-// Guardar resultado del análisis en la base de datos
-async function saveJumpResultToFirebase() {
-    if (!currentUser || !db) return;
-
-    const mode = typeof currentMode !== 'undefined' ? currentMode : 'jump';
-    const record = {
-        userId: currentUser.uid,
-        userName: currentUser.displayName || 'Usuario',
-        jumpCm: finalJumpCm,
-        minAngle: minElbowAngle,
-        maxAngle: maxElbowAngle,
-        mode: mode,
-        timestamp: firebase.firestore.FieldValue.serverTimestamp()
-    };
-
-    try {
-        await db.collection('history').add(record);
-        console.log("Resultado guardado en Firestore con éxito.");
-        loadJumpHistory(currentUser.uid); // Recargar lista
-    } catch (error) {
-        console.error("Error guardando datos en Firestore:", error);
+    if (user) {
+        if (loginBtn) loginBtn.style.display = 'none';
+        if (userInfo) userInfo.style.display = 'flex';
+        if (userName) userName.innerText = user.displayName || user.email;
+        if (btnShowHistory) btnShowHistory.style.display = 'inline-block'; // Muestra el botón estético
+    } else {
+        if (loginBtn) loginBtn.style.display = 'block';
+        if (userInfo) userInfo.style.display = 'none';
+        if (btnShowHistory) btnShowHistory.style.display = 'none';
     }
 }
 
-// Cargar Historial de Saltos
-async function loadJumpHistory(userId) {
-    if (!db || !historyList) return;
+// ==========================================
+// 3. HISTORIAL Y RECOMENDACIONES DE MEJORA
+// ==========================================
+async function saveAnalysisToHistory(mode, value) {
+    if (!currentUser || !db) return;
+
+    try {
+        const historyRef = db.collection('history');
+        const lastQuery = await historyRef
+            .where('userId', '==', currentUser.uid)
+            .where('mode', '==', mode)
+            .orderBy('createdAt', 'desc')
+            .limit(1)
+            .get();
+
+        let improvementPercent = null;
+        let improvementMsg = "🌟 ¡Tu primer registro base ha sido guardado!";
+
+        if (!lastQuery.empty) {
+            const lastRecord = lastQuery.docs[0].data();
+            const previousValue = parseFloat(lastRecord.value);
+            const currentValue = parseFloat(value);
+
+            if (previousValue > 0) {
+                const diff = currentValue - previousValue;
+                improvementPercent = ((diff / previousValue) * 100).toFixed(1);
+
+                if (improvementPercent > 0) {
+                    improvementMsg = `🚀 **+${improvementPercent}% de mejora** respecto a tu último salto (${previousValue} cm). ¡Sigue así!`;
+                } else if (improvementPercent < 0) {
+                    improvementMsg = `📉 **${improvementPercent}%** respecto a tu registro anterior (${previousValue} cm). No te desanimes, es normal fluctuar.`;
+                } else {
+                    improvementMsg = `🎯 Mismo resultado que antes (${previousValue} cm). Has encontrado consistencia.`;
+                }
+            }
+        }
+
+        // GENERADOR DE RECOMENDACIONES REALISTAS DE SALTO
+        const jumpTips = [
+            "💡 <strong>Física aplicada:</strong> Acelera tu penúltimo paso. Cuanto más rápido entres al salto, más fuerza horizontal convertirás en elevación vertical.",
+            "💡 <strong>Biomecánica:</strong> Asegura la 'Triple Extensión'. Tienes que extender por completo el tobillo, la rodilla y la cadera en el momento de despegar.",
+            "💡 <strong>Aprovecha el cuerpo:</strong> Usa un braceo mucho más violento hacia arriba. Los brazos pueden sumarte hasta un 15% extra de altura si los coordinas bien.",
+            "💡 <strong>El centro de gravedad:</strong> Baja más la cadera justo antes de saltar. Si no te agachas lo suficiente, tus músculos no tendrán espacio para generar potencia.",
+            "💡 <strong>Fuerza reactiva:</strong> Intenta que el tiempo de contacto de tus pies con el suelo sea el mínimo posible. Absorbe y explota."
+        ];
+        
+        // Elige un consejo al azar si es modo salto
+        const tipText = mode === 'jump' 
+            ? jumpTips[Math.floor(Math.random() * jumpTips.length)] 
+            : "💡 <strong>Consejo:</strong> Mantén el codo alineado con el hombro para que la fuerza vaya recta hacia el aro.";
+
+        await historyRef.add({
+            userId: currentUser.uid,
+            mode: mode,
+            value: value,
+            improvementPercent: improvementPercent,
+            createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+            dateString: new Date().toLocaleDateString('es-ES')
+        });
+
+        // Mostrar en la tarjeta del entrenador
+        const coachCard = document.getElementById('coach-card');
+        const coachAdvice = document.getElementById('coach-advice');
+        const coachTitle = document.getElementById('coach-title');
+
+        if (coachCard && coachAdvice) {
+            coachCard.style.display = 'block';
+            coachTitle.innerText = mode === 'jump' ? 'Análisis Biomecánico del Salto' : 'Análisis Mecánica de Tiro';
+            coachAdvice.innerHTML = `
+                <span style="font-size: 18px; color: white;">Has alcanzado: <strong style="color: #00F0FF;">${value} ${mode==='jump'?'cm':'°'}</strong></span>
+                <br><br>
+                <span style="color: #ccc;">${improvementMsg}</span>
+                <br><br>
+                <div style="background: rgba(0, 240, 255, 0.1); padding: 10px; border-left: 4px solid #00F0FF; border-radius: 4px;">
+                    ${tipText}
+                </div>
+            `;
+        }
+
+        loadUserHistory();
+
+    } catch (error) {
+        console.error("Error guardando:", error);
+    }
+}
+
+async function loadUserHistory() {
+    if (!currentUser || !db) return;
+
+    const historyList = document.getElementById('history-list');
+    if (!historyList) return;
 
     try {
         const snapshot = await db.collection('history')
-            .where('userId', '==', userId)
-            .orderBy('timestamp', 'desc')
+            .where('userId', '==', currentUser.uid)
+            .orderBy('createdAt', 'desc')
             .limit(10)
             .get();
 
         historyList.innerHTML = '';
 
         if (snapshot.empty) {
-            historyList.innerHTML = '<li style="color:#aaa;">No tienes registros guardados aún.</li>';
+            historyList.innerHTML = '<li style="color: #888;">No hay saltos guardados aún. Analiza un vídeo primero.</li>';
             return;
         }
 
-        snapshot.forEach((doc) => {
+        snapshot.forEach(doc => {
             const data = doc.data();
-            const date = data.timestamp ? new Date(data.timestamp.toDate()).toLocaleDateString() : 'Reciente';
             const li = document.createElement('li');
-            li.style.margin = "8px 0";
-            li.style.padding = "8px";
-            li.style.background = "#1a1a2e";
-            li.style.borderRadius = "6px";
-            li.style.borderLeft = "4px solid #00F0FF";
-            
-            if (data.mode === 'shot') {
-                li.innerHTML = `<strong>${date}:</strong> Tiro | Ángulos: ${data.minAngle}° / ${data.maxAngle}° | Salto: ${data.jumpCm} cm`;
-            } else {
-                li.innerHTML = `<strong>${date}:</strong> Salto Vertical: <span style="color:#00F0FF; font-weight:bold;">${data.jumpCm} cm</span>`;
+            li.style.padding = '12px 10px';
+            li.style.borderBottom = '1px solid rgba(255,255,255,0.1)';
+            li.style.display = 'flex';
+            li.style.justifyContent = 'space-between';
+            li.style.alignItems = 'center';
+
+            let trendTag = '';
+            if (data.improvementPercent !== null && data.improvementPercent !== undefined) {
+                if (data.improvementPercent > 0) trendTag = `<span style="color: #00FF88; font-weight:bold;">(+${data.improvementPercent}%)</span>`;
+                else if (data.improvementPercent < 0) trendTag = `<span style="color: #FF4A00; font-weight:bold;">(${data.improvementPercent}%)</span>`;
             }
+
+            const unit = data.mode === 'jump' ? 'cm' : '°';
+            const icon = data.mode === 'jump' ? '🚀' : '🏀';
+
+            li.innerHTML = `
+                <span>${icon} <strong style="font-size:18px; color:#00F0FF;">${data.value} ${unit}</strong> ${trendTag}</span>
+                <span style="color: #888; font-size: 13px;">${data.dateString || ''}</span>
+            `;
             historyList.appendChild(li);
         });
+
     } catch (error) {
-        console.error("Error al cargar historial:", error);
+        console.error("Error cargando el historial:", error);
     }
 }
 
 // ==========================================
-// 5. MEDIDA ÁNGULO BIOMECÁNICO & MEDIAPIPE POSE
+// 4. PROCESAMIENTO BIOMECÁNICO (MEDIAPIPE)
 // ==========================================
+let minElbowAngle = 180;
+let maxElbowAngle = 0;
+let maxJumpHeightCm = 0;
+let baseHipY = null;
+
+const videoElement = document.getElementById('input_video');
+const canvasElement = document.getElementById('output_canvas');
+const canvasCtx = canvasElement ? canvasElement.getContext('2d') : null;
+
 function calculateAngle(A, B, C) {
-    let radians = Math.atan2(C.y - B.y, C.x - B.x) - Math.atan2(A.y - B.y, A.x - B.x);
+    const radians = Math.atan2(C.y - B.y, C.x - B.x) - Math.atan2(A.y - B.y, A.x - B.x);
     let angle = Math.abs((radians * 180.0) / Math.PI);
     if (angle > 180.0) angle = 360 - angle;
     return angle;
 }
 
-const pose = new Pose({
-    locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/pose/${file}`
-});
+const pose = new Pose({ locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/pose/${file}` });
 
 pose.setOptions({
     modelComplexity: 1,
@@ -185,184 +238,110 @@ pose.setOptions({
     minTrackingConfidence: 0.5
 });
 
-pose.onResults(onResults);
+pose.onResults((results) => {
+    if (!canvasElement || !canvasCtx) return;
 
-function onResults(results) {
+    canvasElement.width = videoElement.videoWidth || 640;
+    canvasElement.height = videoElement.videoHeight || 480;
+
     canvasCtx.save();
     canvasCtx.clearRect(0, 0, canvasElement.width, canvasElement.height);
-    
-    // Dibujar el fotograma del vídeo en el canvas
     canvasCtx.drawImage(results.image, 0, 0, canvasElement.width, canvasElement.height);
 
     if (results.poseLandmarks) {
-        // Dibujar Esqueleto Biomecánico
         drawConnectors(canvasCtx, results.poseLandmarks, POSE_CONNECTIONS, { color: '#00F0FF', lineWidth: 3 });
         drawLandmarks(canvasCtx, results.poseLandmarks, { color: '#FF4A00', lineWidth: 2, radius: 4 });
 
-        const landmarks = results.poseLandmarks;
-        const shoulder = landmarks[12]; // Hombro derecho
-        const elbow = landmarks[14];
-        const wrist = landmarks[16];
-        const hip = landmarks[24]; // Cadera derecha
+        const shoulder = results.poseLandmarks[12];
+        const elbow = results.poseLandmarks[14];
+        const wrist = results.poseLandmarks[16];
+        const hip = results.poseLandmarks[24];
+        const ankle = results.poseLandmarks[28];
 
-        // 1. Cálculos de Tiro (Ángulos)
         if (shoulder && elbow && wrist) {
             const currentAngle = calculateAngle(shoulder, elbow, wrist);
-            if (currentAngle < minElbowAngle) minElbowAngle = Math.round(currentAngle);
-            if (currentAngle > maxElbowAngle) maxElbowAngle = Math.round(currentAngle);
-            
-            minAngleVal.innerText = `${minElbowAngle}°`;
-            maxAngleVal.innerText = `${maxElbowAngle}°`;
+            if (currentAngle < minElbowAngle) minElbowAngle = currentAngle;
+            if (currentAngle > maxElbowAngle) maxElbowAngle = currentAngle;
+
+            const minAngleElem = document.getElementById('min-angle-val');
+            const maxAngleElem = document.getElementById('max-angle-val');
+            if (minAngleElem) minAngleElem.innerText = `${Math.round(minElbowAngle)}°`;
+            if (maxAngleElem) maxAngleElem.innerText = `${Math.round(maxElbowAngle)}°`;
         }
 
-        // 2. Calibración Antropométrica (Píxeles a Centímetros)
-        if (shoulder && hip) {
-            const currentTorsoPx = Math.abs(hip.y - shoulder.y) * canvasElement.height;
-            if (currentTorsoPx > referenceTorsoPx) referenceTorsoPx = currentTorsoPx;
+        if (hip && ankle) {
+            if (baseHipY === null || hip.y > baseHipY) baseHipY = hip.y;
 
-            const yPos = hip.y * canvasElement.height;
-            if (yPos < minYHip) minYHip = yPos;
-            if (yPos > maxYHip) maxYHip = yPos;
-            
-            const verticalDeltaPx = maxYHip - minYHip;
+            const personHeightPx = Math.abs(ankle.y - shoulder.y);
+            const deltaY = baseHipY - hip.y;
 
-            if (referenceTorsoPx > 0) {
-                const cmPerPx = 50 / referenceTorsoPx;
-                finalJumpCm = Math.round(verticalDeltaPx * cmPerPx);
-                
-                if (finalJumpCm < 8 && typeof currentMode !== 'undefined' && currentMode === 'shot') {
-                    jumpVal.innerText = "0"; // Tiro a pie firme
-                } else {
-                    jumpVal.innerText = finalJumpCm;
+            if (personHeightPx > 0 && deltaY > 0) {
+                const estimatedJumpCm = (deltaY / personHeightPx) * 175; // Estimación basada en proporción humana realista
+                if (estimatedJumpCm > maxJumpHeightCm) {
+                    maxJumpHeightCm = estimatedJumpCm;
                 }
             }
+
+            const jumpValElem = document.getElementById('jump-val');
+            if (jumpValElem) jumpValElem.innerText = Math.round(maxJumpHeightCm);
         }
     }
     canvasCtx.restore();
-}
+});
 
 // ==========================================
-// 6. CARGA DEL VÍDEO Y RESETEO DE UI
+// 5. MANEJO DE SUBIDA DE VÍDEO Y PROGRESO
 // ==========================================
-if (fileInput) {
-    fileInput.addEventListener('change', (e) => {
+const videoInput = document.getElementById('video-upload');
+
+if (videoInput) {
+    videoInput.addEventListener('change', (e) => {
         const file = e.target.files[0];
         if (!file) return;
 
-        statusText.innerText = "Cargando archivo...";
-        progressContainer.style.display = "block";
-        progressBar.style.width = "0%";
-        progressPercent.innerText = "0%";
-        coachCard.style.display = "none";
-
-        // Reseteo de Métricas
         minElbowAngle = 180;
         maxElbowAngle = 0;
-        minYHip = 10000;
-        maxYHip = 0;
-        referenceTorsoPx = 0;
-        finalJumpCm = 0;
-        
-        minAngleVal.innerText = `--°`;
-        maxAngleVal.innerText = `--°`;
-        jumpVal.innerText = `--`;
+        maxJumpHeightCm = 0;
+        baseHipY = null;
+
+        const progressContainer = document.getElementById('progress-container');
+        const progressBar = document.getElementById('progress-bar');
+        const progressPercent = document.getElementById('progress-percent');
+        const statusText = document.getElementById('status-text');
+
+        if (progressContainer) progressContainer.style.display = 'block';
+        if (statusText) statusText.innerText = 'Analizando vídeo fotograma a fotograma...';
 
         const url = URL.createObjectURL(file);
         videoElement.src = url;
+        videoElement.load();
 
         videoElement.onloadedmetadata = () => {
-            canvasElement.width = videoElement.videoWidth;
-            canvasElement.height = videoElement.videoHeight;
-            statusText.innerText = "Analizando fotogramas...";
-            processVideo();
+            videoElement.currentTime = 0;
+            processVideoFrames(progressBar, progressPercent, statusText);
         };
     });
 }
 
-// PROCESAMIENTO ASÍNCRONO DE VÍDEO
-async function processVideo() {
+async function processVideoFrames(progressBar, progressPercent, statusText) {
     const duration = videoElement.duration;
-    let currentTime = 0.001; 
-    const frameStep = 0.05; 
+    let currentTime = 0;
+    const step = 0.08; 
 
-    videoElement.onseeked = async () => {
-        try {
-            await pose.send({ image: videoElement });
-            
-            const progress = Math.min(100, Math.round((currentTime / duration) * 100));
-            progressBar.style.width = `${progress}%`;
-            progressPercent.innerText = `${progress}%`;
+    while (currentTime < duration) {
+        videoElement.currentTime = currentTime;
+        await new Promise(resolve => videoElement.onseeked = resolve);
+        await pose.send({ image: videoElement });
 
-            if (currentTime + frameStep <= duration) {
-                currentTime += frameStep;
-                videoElement.currentTime = currentTime; 
-            } else if (currentTime < duration) {
-                currentTime = duration;
-                videoElement.currentTime = currentTime;
-            } else {
-                progressBar.style.width = "100%";
-                progressPercent.innerText = "100%";
-                statusText.innerText = "Análisis completado";
-                generateCoachAdvice();
-            }
-        } catch (error) {
-            console.error("Error analizando el fotograma:", error);
-            statusText.innerText = "Error en el análisis. Intenta de nuevo.";
-        }
-    };
+        currentTime += step;
+        const percent = Math.min(Math.round((currentTime / duration) * 100), 100);
 
-    videoElement.currentTime = currentTime;
-}
-
-// ==========================================
-// 7. GENERADOR DE CONSEJOS Y GUARDADO AUTOMÁTICO
-// ==========================================
-function generateCoachAdvice() {
-    coachCard.style.display = "block";
-    
-    const mode = typeof currentMode !== 'undefined' ? currentMode : 'shot';
-    
-    if (mode === 'shot') {
-        let feedback = "";
-        
-        if (minElbowAngle < 75) {
-            feedback = "<strong>Punto de Carga Muy Cerrado:</strong> Estás colapsando demasiado el codo en la preparación. Esto genera tensión innecesaria y frena la fluidez de liberación. Abre ligeramente la preparación para mantener una catapulta limpia.";
-        } else if (minElbowAngle > 105) {
-            feedback = "<strong>Tiro Empujado:</strong> Tu punto de carga supera los 100°. Estás empujando el balón desde el pecho hacia adelante en vez de acompañar la trayectoria vertical. Eleva el balón justo por encima de tu ceja dominante antes de soltar.";
-        } else {
-            feedback = "<strong>Mecánica de Carga Excelente:</strong> Tu ángulo de preparación está en la zona dulce de tiro rápido. Mantienes una palanca equilibrada entre fuerza y velocidad.";
-        }
-
-        if (maxElbowAngle < 155) {
-            feedback += "<br><br>Además, <strong>no estás terminando la extensión:</strong> Cortas el seguimiento con la muñeca antes de tiempo. Mantén el brazo extendido y la 'mano en el aro' hasta que el balón toque la red.";
-        } else {
-            feedback += "<br><br><strong>Excelente seguimiento (Follow-through):</strong> Tu brazo se extiende completamente asegurando una parábola suave.";
-        }
-        
-        if (finalJumpCm < 8) {
-            feedback += "<br><br><strong>Biomecánica Base:</strong> El análisis detecta un tiro a pie firme (tiro libre). Tu potencia depende 100% de la cadena cinética de tus piernas hasta tus brazos.";
-        } else {
-            feedback += `<br><br><strong>Tiro en Suspensión:</strong> Has ejecutado el tiro con un salto de aprox. ${finalJumpCm} cm. Asegúrate de soltar el balón en el punto más alto para evitar tapones.`;
-        }
-
-        coachAdvice.innerHTML = feedback;
-
-    } else {
-        let feedback = "";
-
-        if (finalJumpCm < 20) {
-            feedback = "<strong>Pérdida de Transmisión de Fuerza:</strong> La carga es demasiado rígida. Flexiona caderas y rodillas de manera más dinámica antes del despegue para convertir la energía elástica del suelo en elevación pura.";
-        } else if (finalJumpCm < 45) {
-            feedback = "<strong>Buen Muelle Base:</strong> Tu salto es sólido, pero para ganar centímetros extra enfócate en acelerar la velocidad del último paso (plant-step) y coordinar un balanceo de brazos agresivo hacia arriba justo antes del despegue.";
-        } else {
-            feedback = `<strong>Potencia Explosiva Brutal (${finalJumpCm} cm):</strong> Gran transferencia de triple extensión (tobillo, rodilla y cadera). Tienes un salto por encima de la media. Mantén tu fluidez de entrada para no perder velocidad horizontal.`;
-        }
-
-        coachAdvice.innerHTML = feedback;
+        if (progressBar) progressBar.style.width = `${percent}%`;
+        if (progressPercent) progressPercent.innerText = `${percent}%`;
     }
 
-    // GUARDAR EN FIREBASE AUTOMÁTICAMENTE SI HAY UN USUARIO LOGUEADO
-    if (currentUser) {
-        saveJumpResultToFirebase();
-    }
+    if (statusText) statusText.innerText = 'Análisis completado.';
+
+    const finalValue = currentMode === 'jump' ? Math.round(maxJumpHeightCm) : Math.round(maxElbowAngle);
+    saveAnalysisToHistory(currentMode, finalValue);
 }
