@@ -29,39 +29,46 @@
             <h1 class="hero-title">MÁS ALTURA.<br>MÁS PRECISIÓN.<br><span class="highlight">BIOMECÁNICA DE ÉLITE.</span></h1>
             <p class="hero-subtitle">Mide tu salto y perfecciona tu tiro. Análisis biomecánico instantáneo en tu navegador, 100% privado.</p>
             
-            <!-- Selector de Modo: Tiro o Salto -->
+            <!-- PANEL DE INICIO DE SESIÓN -->
+            <div style="background: rgba(255,255,255,0.05); padding: 15px; border-radius: 8px; margin-bottom: 25px; border: 1px solid rgba(255,255,255,0.1);">
+                <button id="login-btn" style="background: #4285F4; color: white; border: none; padding: 10px 15px; border-radius: 5px; cursor: pointer; font-weight: bold; width: 100%; transition: 0.3s;">
+                    Entrar con Google para guardar progreso
+                </button>
+
+                <div id="user-info" style="display: none; align-items: center; justify-content: space-between; gap: 15px;">
+                    <span style="color: white; font-family: 'Inter', sans-serif;">Atleta: <strong id="user-name" style="color: #00F0FF;"></strong></span>
+                    <button id="logout-btn" style="background: #FF4A00; color: white; border: none; padding: 6px 12px; border-radius: 5px; cursor: pointer; font-weight: bold;">Salir</button>
+                </div>
+            </div>
+            
+            <!-- Selector de Modo -->
             <div class="mode-selector">
                 <button type="button" class="mode-btn active" id="btn-mode-shot" onclick="setAnalysisMode('shot')">🏀 MECÁNICA DE TIRO</button>
                 <button type="button" class="mode-btn" id="btn-mode-jump" onclick="setAnalysisMode('jump')">🚀 SALTO VERTICAL</button>
             </div>
 
-            <!-- Zona de Subida y Consentimiento Legal -->
+            <!-- Zona de Subida -->
             <div class="upload-module">
                 <div class="legal-checkbox-container">
                     <input type="checkbox" id="legal-consent">
                     <label for="legal-consent">
-                        He leído y acepto la <span class="legal-link" onclick="openModal('modal-privacidad')">Política de Privacidad y uso de IA</span>. Entiendo que el procesamiento de mi vídeo es 100% local.
+                        He leído y acepto la <span class="legal-link" onclick="openModal('modal-privacidad')">Política de Privacidad y uso de IA</span>.
                     </label>
                 </div>
                 
-                <label for="video-upload" class="cta-primary disabled" id="upload-label">
-                    ANALIZAR MI TIRO
-                </label>
+                <label for="video-upload" class="cta-primary disabled" id="upload-label">ANALIZAR MI TIRO</label>
                 <input type="file" id="video-upload" accept="video/mp4,video/mov,video/webm" disabled>
                 
-                <!-- Barra de Carga -->
                 <div class="progress-container" id="progress-container" style="display: none;">
                     <div class="progress-bar-bg">
                         <div class="progress-bar-fill" id="progress-bar"></div>
                     </div>
                     <span class="progress-text" id="progress-percent">0%</span>
                 </div>
-
                 <p id="status-text" class="status-msg">Selecciona un vídeo para comenzar</p>
             </div>
         </div>
         
-        <!-- Reproductor y Canvas -->
         <div class="hero-visual">
             <div class="canvas-wrapper">
                 <video id="input_video" playsinline muted style="display:none;"></video>
@@ -70,60 +77,45 @@
         </div>
     </section>
 
-    <!-- SECCIÓN VENTAJAS -->
-    <section class="frictionless" id="features">
-        <div class="feature-card">
-            <div class="feature-icon">⚡</div>
-            <h3 class="feature-title">Cero Espera</h3>
-            <p class="feature-text">Procesado en segundos gracias a tu GPU. Inmediatez pura en cancha.</p>
-        </div>
-        <div class="feature-card">
-            <div class="feature-icon">🔒</div>
-            <h3 class="feature-title">100% Privado</h3>
-            <p class="feature-text">Tus vídeos no se suben a ningún servidor. Todo el análisis ocurre en tu dispositivo.</p>
-        </div>
-        <div class="feature-card">
-            <div class="feature-icon">🎯</div>
-            <h3 class="feature-title">Consejos Reales</h3>
-            <p class="feature-text">Análisis biomecánico traducido a instrucciones claras para aplicar en tu próximo entrenamiento.</p>
-        </div>
-    </section>
-
     <!-- SECCIÓN MÉTRICAS Y CONSEJOS -->
     <section class="deep-dive" id="metrics">
         <h2 class="section-heading">MÉTRICAS & DIAGNÓSTICO</h2>
         
         <div class="metrics-grid">
-            <!-- PANEL 1: Carga (Se oculta en Salto) -->
             <div class="metric-panel" id="panel-carga">
                 <div class="metric-data">∠ <span class="mono" id="min-angle-val">--°</span></div>
-                <h4 class="metric-name" id="label-metric-1">PUNTO DE CARGA</h4>
-                <p class="metric-desc" id="min-angle-msg">Ángulo del codo en la preparación del tiro.</p>
+                <h4 class="metric-name">PUNTO DE CARGA</h4>
+                <p class="metric-desc">Ángulo del codo en la preparación.</p>
             </div>
             
-            <!-- PANEL 2: Extensión (Se oculta en Salto) -->
             <div class="metric-panel" id="panel-extension">
                 <div class="metric-data">∠ <span class="mono" id="max-angle-val">--°</span></div>
-                <h4 class="metric-name" id="label-metric-2">EXTENSIÓN FINAL</h4>
-                <p class="metric-desc" id="max-angle-msg">Apertura en la liberación del balón.</p>
+                <h4 class="metric-name">EXTENSIÓN FINAL</h4>
+                <p class="metric-desc">Apertura al liberar el balón.</p>
             </div>
             
-            <!-- PANEL 3: Salto Vertical (Siempre visible, calibrado en CM) -->
             <div class="metric-panel" id="panel-salto">
                 <div class="metric-data"><span class="mono" id="jump-val">--</span> <span style="font-size: 16px;">CM</span></div>
                 <h4 class="metric-name">ELEVACIÓN VERTICAL</h4>
-                <p class="metric-desc" id="jump-msg">Estimación antropométrica del salto neto.</p>
+                <p class="metric-desc">Estimación biomecánica del salto.</p>
             </div>
         </div>
 
+        <!-- EL BOTÓN ESTÉTICO DEL HISTORIAL (Aparecerá al iniciar sesión) -->
+        <div style="text-align: center; margin-top: 20px;">
+            <button id="btn-show-history" style="display: none; background: transparent; color: #00F0FF; border: 2px solid #00F0FF; padding: 12px 24px; border-radius: 8px; cursor: pointer; font-weight: bold; font-family: 'Inter', sans-serif; font-size: 15px; text-transform: uppercase; letter-spacing: 1px; transition: all 0.3s ease; box-shadow: 0 0 10px rgba(0, 240, 255, 0.2);" onmouseover="this.style.background='#00F0FF'; this.style.color='#111';" onmouseout="this.style.background='transparent'; this.style.color='#00F0FF';">
+                📊 Historial de salto vertical
+            </button>
+        </div>
+
         <!-- TARJETA DE CONSEJOS DEL ENTRENADOR -->
-        <div class="coach-card" id="coach-card" style="display: none;">
+        <div class="coach-card" id="coach-card" style="display: none; margin-top: 30px;">
             <div class="coach-header">
                 <span class="coach-badge">PRO COACH FEEDBACK</span>
                 <h3 id="coach-title">Diagnóstico Técnico</h3>
             </div>
             <div class="coach-body">
-                <p id="coach-advice">Carga un vídeo para recibir correcciones técnicas aplicables a tu juego.</p>
+                <p id="coach-advice" style="line-height: 1.6;">Carga un vídeo para recibir correcciones técnicas.</p>
             </div>
         </div>
     </section>
@@ -133,42 +125,34 @@
         <div class="footer-links">
             <span onclick="openModal('modal-aviso')">Aviso Legal</span>
             <span onclick="openModal('modal-privacidad')">Política de Privacidad y IA</span>
-            <span onclick="openModal('modal-terminos')">Términos y Condiciones</span>
         </div>
         <p class="copyright">© 2026 Hoop Mix Team. Todos los derechos reservados.</p>
     </footer>
 
-    <!-- COOKIE BANNER -->
-    <div class="cookie-banner" id="cookie-banner">
-        <p><strong>Transparencia de Datos:</strong> Hoop Mix utiliza arquitectura <em>Zero-Data</em>. No utilizamos cookies de rastreo ni almacenamos tus vídeos.</p>
-        <button onclick="closeCookies()">Entendido</button>
-    </div>
-
-    <!-- MODALES LEGALES -->
+    <!-- MODALES -->
     <div class="modal-overlay" id="modal-overlay">
-        <div class="legal-modal" id="modal-privacidad">
+        
+        <!-- NUEVO MODAL DEL HISTORIAL -->
+        <div class="legal-modal" id="modal-history">
             <div class="modal-header">
-                <h2>Política de Privacidad y Uso de IA</h2>
+                <h2>Tu Historial en la Nube</h2>
                 <span class="close-btn" onclick="closeModal()">✕</span>
             </div>
             <div class="modal-body">
-                <h3>1. Tratamiento de Datos (Zero-Data Policy)</h3>
-                <p>En Hoop Mix aplicamos Privacidad por Diseño (Art. 25 RGPD). <strong>No recabamos ni transmitimos tus vídeos</strong>. El análisis biomecánico se ejecuta localmente en tu dispositivo.</p>
-                <h3>2. Uso de Inteligencia Artificial</h3>
-                <p>Nuestra tecnología de visión artificial identifica coordenadas articulares en la memoria RAM temporal. No realiza reconocimiento facial ni guarda patrones biométricos.</p>
+                <p style="color: #aaa; font-size: 14px; margin-bottom: 15px;">Aquí se guardan tus registros para que midas tu progreso.</p>
+                <ul id="history-list" style="list-style: none; padding: 0; margin: 0; font-size: 15px; color: white; font-family: 'Roboto Mono', monospace;">
+                    <!-- Aquí aparecerán los saltos automáticamente -->
+                </ul>
             </div>
         </div>
 
-        <div class="legal-modal" id="modal-terminos">
+        <div class="legal-modal" id="modal-privacidad">
             <div class="modal-header">
-                <h2>Términos y Condiciones</h2>
+                <h2>Privacidad (Zero-Data Policy)</h2>
                 <span class="close-btn" onclick="closeModal()">✕</span>
             </div>
             <div class="modal-body">
-                <h3>1. Naturaleza del Servicio</h3>
-                <p>Herramienta con fines deportivos y formativos. Las métricas son estimaciones algorítmicas mediante proporciones antropométricas y pueden presentar márgenes de error dependiendo del ángulo de grabación.</p>
-                <h3>2. Exención de Responsabilidad Médica</h3>
-                <p>No es un dispositivo médico. El usuario asume la responsabilidad sobre la ejecución de sus ejercicios.</p>
+                <p>El análisis biomecánico se ejecuta localmente. Tus vídeos nunca se suben a ningún servidor. Solo guardamos tus marcas métricas si inicias sesión voluntariamente.</p>
             </div>
         </div>
 
@@ -178,9 +162,7 @@
                 <span class="close-btn" onclick="closeModal()">✕</span>
             </div>
             <div class="modal-body">
-                <p><strong>Titularidad:</strong> Hoop Mix Team.</p>
-                <p><strong>Contacto:</strong> officialhoopmix@gmail.com</p>
-                <p><strong>Propiedad Intelectual:</strong> Todos los derechos reservados a Hoop Mix.</p>
+                <p>Las métricas son estimaciones mediante IA y dependen del ángulo de cámara. No es un dispositivo médico.</p>
             </div>
         </div>
     </div>
@@ -189,7 +171,6 @@
     <script>
         let currentMode = 'shot';
 
-        // LÓGICA PARA MOSTRAR/OCULTAR PANELES SEGÚN EL MODO
         function setAnalysisMode(mode) {
             currentMode = mode;
             const btnShot = document.getElementById('btn-mode-shot');
@@ -202,14 +183,12 @@
                 btnShot.classList.add('active');
                 btnJump.classList.remove('active');
                 uploadLabel.innerText = 'ANALIZAR MI TIRO';
-                // Mostrar los paneles de tiro
                 panelCarga.style.display = 'block';
                 panelExtension.style.display = 'block';
             } else {
                 btnJump.classList.add('active');
                 btnShot.classList.remove('active');
                 uploadLabel.innerText = 'ANALIZAR MI SALTO';
-                // Ocultar los paneles de tiro, dejando solo el de salto
                 panelCarga.style.display = 'none';
                 panelExtension.style.display = 'none';
             }
@@ -244,16 +223,18 @@
             document.body.style.overflow = 'auto';
         }
 
-        function closeCookies() {
-            document.getElementById('cookie-banner').style.display = 'none';
-            localStorage.setItem('hoopmix_cookies_accepted', 'true');
-        }
-        
-        if(!localStorage.getItem('hoopmix_cookies_accepted')) {
-            document.getElementById('cookie-banner').style.display = 'flex';
-        }
+        // Evento para el botón estético del historial
+        document.getElementById('btn-show-history').addEventListener('click', () => {
+            openModal('modal-history');
+        });
     </script>
 
+    <!-- Librerías de Firebase -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+    
+    <!-- Script principal -->
     <script src="script.js"></script>
 </body>
 </html>
