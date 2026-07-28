@@ -33,9 +33,7 @@ document.addEventListener('DOMContentLoaded', () => {
         auth.onAuthStateChanged((user) => {
             currentUser = user;
             updateUIAuthState(user);
-            if (user) {
-                loadUserHistory();
-            }
+            loadUserHistory();
         });
     }
 });
@@ -44,7 +42,8 @@ function loginWithGoogle() {
     if (!auth) return;
     const provider = new firebase.auth.GoogleAuthProvider();
     auth.signInWithPopup(provider).catch((error) => {
-        console.error("Error al iniciar sesión:", error.message);
+        console.error("Error al iniciar sesión:", error);
+        alert("Error al iniciar sesión: " + error.message);
     });
 }
 
@@ -53,6 +52,7 @@ function logout() {
     auth.signOut().then(() => {
         currentUser = null;
         updateUIAuthState(null);
+        loadUserHistory();
     });
 }
 
@@ -66,7 +66,7 @@ function updateUIAuthState(user) {
         if (loginBtn) loginBtn.style.display = 'none';
         if (userInfo) userInfo.style.display = 'flex';
         if (userName) userName.innerText = user.displayName || user.email;
-        if (btnShowHistory) btnShowHistory.style.display = 'inline-block'; // Muestra el botón estético
+        if (btnShowHistory) btnShowHistory.style.display = 'inline-block';
     } else {
         if (loginBtn) loginBtn.style.display = 'block';
         if (userInfo) userInfo.style.display = 'none';
@@ -75,113 +75,129 @@ function updateUIAuthState(user) {
 }
 
 // ==========================================
-// 3. HISTORIAL Y RECOMENDACIONES DE MEJORA
+// 3. MOSTRAR CONSEJOS Y GUARDAR EN HISTORIAL
 // ==========================================
-async function saveAnalysisToHistory(mode, value) {
-    if (!currentUser || !db) return;
+async function processAnalysisResults(mode, value) {
+    let improvementMsg = "";
+    let improvementPercent = null;
 
-    try {
-        const historyRef = db.collection('history');
-        const lastQuery = await historyRef
-            .where('userId', '==', currentUser.uid)
-            .where('mode', '==', mode)
-            .orderBy('createdAt', 'desc')
-            .limit(1)
-            .get();
+    if (currentUser && db) {
+        try {
+            const snapshot = await db.collection('history')
+                .where('userId', '==', currentUser.uid)
+                .get();
 
-        let improvementPercent = null;
-        let improvementMsg = "🌟 ¡Tu primer registro base ha sido guardado!";
+            if (!snapshot.empty) {
+                let records = snapshot.docs.map(d => d.data());
+                const modeRecords = records.filter(r => r.mode === mode);
+                modeRecords.sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0));
 
-        if (!lastQuery.empty) {
-            const lastRecord = lastQuery.docs[0].data();
-            const previousValue = parseFloat(lastRecord.value);
-            const currentValue = parseFloat(value);
+                if (modeRecords.length > 0) {
+                    const previousValue = parseFloat(modeRecords[0].value);
+                    const currentValue = parseFloat(value);
 
-            if (previousValue > 0) {
-                const diff = currentValue - previousValue;
-                improvementPercent = ((diff / previousValue) * 100).toFixed(1);
+                    if (previousValue > 0) {
+                        const diff = currentValue - previousValue;
+                        improvementPercent = parseFloat(((diff / previousValue) * 100).toFixed(1));
 
-                if (improvementPercent > 0) {
-                    improvementMsg = `🚀 **+${improvementPercent}% de mejora** respecto a tu último salto (${previousValue} cm). ¡Sigue así!`;
-                } else if (improvementPercent < 0) {
-                    improvementMsg = `📉 **${improvementPercent}%** respecto a tu registro anterior (${previousValue} cm). No te desanimes, es normal fluctuar.`;
-                } else {
-                    improvementMsg = `🎯 Mismo resultado que antes (${previousValue} cm). Has encontrado consistencia.`;
+                        if (improvementPercent > 0) {
+                            improvementMsg = `🚀 <strong>+${improvementPercent}% de mejora</strong> respecto a tu último registro (${previousValue} ${mode === 'jump' ? 'cm' : '°'}). ¡Sigue así!`;
+                        } else if (improvementPercent < 0) {
+                            improvementMsg = `📉 <strong>${improvementPercent}%</strong> respecto a tu registro anterior (${previousValue} ${mode === 'jump' ? 'cm' : '°'}). No pasa nada, es normal fluctuar.`;
+                        } else {
+                            improvementMsg = `🎯 Mismo resultado que tu registro anterior (${previousValue} ${mode === 'jump' ? 'cm' : '°'}). Has encontrado consistencia.`;
+                        }
+                    }
                 }
             }
+        } catch (e) {
+            console.warn("No se pudo consultar el registro anterior:", e);
         }
+    }
 
-        // GENERADOR DE RECOMENDACIONES REALISTAS DE SALTO
-        const jumpTips = [
-            "💡 <strong>Física aplicada:</strong> Acelera tu penúltimo paso. Cuanto más rápido entres al salto, más fuerza horizontal convertirás en elevación vertical.",
-            "💡 <strong>Biomecánica:</strong> Asegura la 'Triple Extensión'. Tienes que extender por completo el tobillo, la rodilla y la cadera en el momento de despegar.",
-            "💡 <strong>Aprovecha el cuerpo:</strong> Usa un braceo mucho más violento hacia arriba. Los brazos pueden sumarte hasta un 15% extra de altura si los coordinas bien.",
-            "💡 <strong>El centro de gravedad:</strong> Baja más la cadera justo antes de saltar. Si no te agachas lo suficiente, tus músculos no tendrán espacio para generar potencia.",
-            "💡 <strong>Fuerza reactiva:</strong> Intenta que el tiempo de contacto de tus pies con el suelo sea el mínimo posible. Absorbe y explota."
-        ];
-        
-        // Elige un consejo al azar si es modo salto
-        const tipText = mode === 'jump' 
-            ? jumpTips[Math.floor(Math.random() * jumpTips.length)] 
-            : "💡 <strong>Consejo:</strong> Mantén el codo alineado con el hombro para que la fuerza vaya recta hacia el aro.";
+    if (!improvementMsg) {
+        improvementMsg = currentUser 
+            ? "🌟 ¡Primer registro guardado en la nube para esta categoría!" 
+            : "ℹ️ Inicia sesión para guardar tus marcas y calcular tu progreso real.";
+    }
 
-        await historyRef.add({
-            userId: currentUser.uid,
-            mode: mode,
-            value: value,
-            improvementPercent: improvementPercent,
-            createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-            dateString: new Date().toLocaleDateString('es-ES')
-        });
+    // CONSEJOS MEJORADOS: MÁS NATURALES, REALISTAS Y FÁCILES DE ENTENDER
+    const jumpTips = [
+        "💡 <strong>Dale ritmo al penúltimo paso:</strong> Entra a saltar con velocidad. Ese impulso final hacia adelante es física pura: se transforma en altura. Tienes margen para volar un poco más.",
+        "💡 <strong>Estírate por completo:</strong> Al despegar, asegúrate de estirar bien el tobillo, la rodilla y la cadera, como si quisieras tocar el techo con la cabeza. Es un detalle postural que suma centímetros de verdad.",
+        "💡 <strong>Usa los brazos con fuerza:</strong> Lanza los brazos hacia arriba de forma agresiva justo al saltar. Te van a dar un empujón extra bastante notable si lo coordinas bien.",
+        "💡 <strong>Baja un poco más:</strong> Flexiona un pelín más las rodillas antes de saltar para cargar las piernas como si fueran un muelle. Si no bajas lo suficiente, te quitas potencia tú mismo.",
+        "💡 <strong>Pisa y explota:</strong> Intenta no quedarte 'pegado' al suelo. Cuanto menos tiempo toquen tus pies el piso antes del despegue, más fuerza elástica sacarás. ¡Puedes lograrlo!"
+    ];
 
-        // Mostrar en la tarjeta del entrenador
-        const coachCard = document.getElementById('coach-card');
-        const coachAdvice = document.getElementById('coach-advice');
-        const coachTitle = document.getElementById('coach-title');
+    const shotTips = [
+        "💡 <strong>Codo debajo del balón:</strong> Fíjate en mantener el codo alineado bajo la pelota. Si el codo está recto, la fuerza va directa al aro y fallarás menos a los lados.",
+        "💡 <strong>Acompaña el tiro hasta el final:</strong> Estira bien el brazo al soltar el balón y deja la muñeca caída (el famoso 'cuello de cisne'). Eso le da el arco necesario para que entre limpio."
+    ];
 
-        if (coachCard && coachAdvice) {
-            coachCard.style.display = 'block';
-            coachTitle.innerText = mode === 'jump' ? 'Análisis Biomecánico del Salto' : 'Análisis Mecánica de Tiro';
-            coachAdvice.innerHTML = `
-                <span style="font-size: 18px; color: white;">Has alcanzado: <strong style="color: #00F0FF;">${value} ${mode==='jump'?'cm':'°'}</strong></span>
-                <br><br>
-                <span style="color: #ccc;">${improvementMsg}</span>
-                <br><br>
-                <div style="background: rgba(0, 240, 255, 0.1); padding: 10px; border-left: 4px solid #00F0FF; border-radius: 4px;">
-                    ${tipText}
-                </div>
-            `;
+    const randomTip = mode === 'jump' 
+        ? jumpTips[Math.floor(Math.random() * jumpTips.length)]
+        : shotTips[Math.floor(Math.random() * shotTips.length)];
+
+    const coachCard = document.getElementById('coach-card');
+    const coachAdvice = document.getElementById('coach-advice');
+    const coachTitle = document.getElementById('coach-title');
+
+    if (coachCard && coachAdvice) {
+        coachCard.style.display = 'block';
+        coachTitle.innerText = mode === 'jump' ? 'Análisis Biomecánico del Salto' : 'Análisis Mecánica de Tiro';
+        coachAdvice.innerHTML = `
+            <div style="font-size: 20px; color: white; margin-bottom: 10px;">
+                Resultado: <strong style="color: #00F0FF;">${value} ${mode === 'jump' ? 'cm' : '°'}</strong>
+            </div>
+            <div style="color: #ddd; margin-bottom: 15px;">${improvementMsg}</div>
+            <div style="background: rgba(0, 240, 255, 0.1); padding: 12px; border-left: 4px solid #00F0FF; border-radius: 4px; color: #fff; font-size: 15px;">
+                ${randomTip}
+            </div>
+        `;
+    }
+
+    if (currentUser && db) {
+        try {
+            await db.collection('history').add({
+                userId: currentUser.uid,
+                mode: mode,
+                value: value,
+                improvementPercent: improvementPercent,
+                createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+                dateString: new Date().toLocaleDateString('es-ES')
+            });
+            loadUserHistory();
+        } catch (err) {
+            console.error("Error guardando registro en Firestore:", err);
         }
-
-        loadUserHistory();
-
-    } catch (error) {
-        console.error("Error guardando:", error);
     }
 }
 
 async function loadUserHistory() {
-    if (!currentUser || !db) return;
-
     const historyList = document.getElementById('history-list');
     if (!historyList) return;
+
+    if (!currentUser || !db) {
+        historyList.innerHTML = '<li style="color: #aaa; padding: 10px 0;">Inicia sesión con Google para ver tu historial.</li>';
+        return;
+    }
 
     try {
         const snapshot = await db.collection('history')
             .where('userId', '==', currentUser.uid)
-            .orderBy('createdAt', 'desc')
-            .limit(10)
             .get();
 
-        historyList.innerHTML = '';
-
         if (snapshot.empty) {
-            historyList.innerHTML = '<li style="color: #888;">No hay saltos guardados aún. Analiza un vídeo primero.</li>';
+            historyList.innerHTML = '<li style="color: #888; padding: 10px 0;">No hay análisis guardados. Sube un vídeo para empezar.</li>';
             return;
         }
 
-        snapshot.forEach(doc => {
-            const data = doc.data();
+        let records = snapshot.docs.map(d => d.data());
+        records.sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0));
+
+        historyList.innerHTML = '';
+        records.slice(0, 10).forEach(data => {
             const li = document.createElement('li');
             li.style.padding = '12px 10px';
             li.style.borderBottom = '1px solid rgba(255,255,255,0.1)';
@@ -204,9 +220,8 @@ async function loadUserHistory() {
             `;
             historyList.appendChild(li);
         });
-
     } catch (error) {
-        console.error("Error cargando el historial:", error);
+        console.error("Error al cargar historial:", error);
     }
 }
 
@@ -276,7 +291,7 @@ pose.onResults((results) => {
             const deltaY = baseHipY - hip.y;
 
             if (personHeightPx > 0 && deltaY > 0) {
-                const estimatedJumpCm = (deltaY / personHeightPx) * 175; // Estimación basada en proporción humana realista
+                const estimatedJumpCm = (deltaY / personHeightPx) * 175;
                 if (estimatedJumpCm > maxJumpHeightCm) {
                     maxJumpHeightCm = estimatedJumpCm;
                 }
@@ -290,7 +305,7 @@ pose.onResults((results) => {
 });
 
 // ==========================================
-// 5. MANEJO DE SUBIDA DE VÍDEO Y PROGRESO
+// 5. SUBIDA DE VÍDEO Y PROCESAMIENTO
 // ==========================================
 const videoInput = document.getElementById('video-upload');
 
@@ -343,5 +358,6 @@ async function processVideoFrames(progressBar, progressPercent, statusText) {
     if (statusText) statusText.innerText = 'Análisis completado.';
 
     const finalValue = currentMode === 'jump' ? Math.round(maxJumpHeightCm) : Math.round(maxElbowAngle);
-    saveAnalysisToHistory(currentMode, finalValue);
+    
+    processAnalysisResults(currentMode, finalValue);
 }
