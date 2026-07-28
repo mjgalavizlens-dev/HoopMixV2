@@ -15,6 +15,26 @@
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/control_utils/control_utils.js" crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js" crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/pose/pose.js" crossorigin="anonymous"></script>
+
+    <style>
+        /* Estilos extra para la caja de instrucciones */
+        .instructions-box {
+            background: rgba(0, 240, 255, 0.05);
+            border-left: 3px solid #00F0FF;
+            padding: 12px 15px;
+            margin: 15px 0;
+            border-radius: 0 6px 6px 0;
+            text-align: left;
+            font-size: 14px;
+            color: #ddd;
+            line-height: 1.5;
+        }
+        .instructions-box strong {
+            color: #00F0FF;
+            display: block;
+            margin-bottom: 5px;
+        }
+    </style>
 </head>
 <body>
 
@@ -49,6 +69,15 @@
 
             <!-- Zona de Subida -->
             <div class="upload-module">
+                
+                <!-- CAJA DE INSTRUCCIONES DINÁMICA -->
+                <div id="recording-instructions" class="instructions-box">
+                    <strong>📷 Cómo grabar para el análisis de tiro:</strong>
+                    • Grábate <b>de perfil</b> (de lado).<br>
+                    • Asegúrate de que se vea bien tu brazo completo, desde el hombro hasta el balón.<br>
+                    • Busca un sitio con buena iluminación.
+                </div>
+
                 <div class="legal-checkbox-container">
                     <input type="checkbox" id="legal-consent">
                     <label for="legal-consent">
@@ -101,21 +130,20 @@
             </div>
         </div>
 
-        <!-- EL BOTÓN ESTÉTICO DEL HISTORIAL (Aparecerá al iniciar sesión) -->
         <div style="text-align: center; margin-top: 20px;">
             <button id="btn-show-history" style="display: none; background: transparent; color: #00F0FF; border: 2px solid #00F0FF; padding: 12px 24px; border-radius: 8px; cursor: pointer; font-weight: bold; font-family: 'Inter', sans-serif; font-size: 15px; text-transform: uppercase; letter-spacing: 1px; transition: all 0.3s ease; box-shadow: 0 0 10px rgba(0, 240, 255, 0.2);" onmouseover="this.style.background='#00F0FF'; this.style.color='#111';" onmouseout="this.style.background='transparent'; this.style.color='#00F0FF';">
                 📊 Historial de salto vertical
             </button>
         </div>
 
-        <!-- TARJETA DE CONSEJOS DEL ENTRENADOR -->
+        <!-- TARJETA DE CONSEJOS -->
         <div class="coach-card" id="coach-card" style="display: none; margin-top: 30px;">
             <div class="coach-header">
                 <span class="coach-badge">PRO COACH FEEDBACK</span>
                 <h3 id="coach-title">Diagnóstico Técnico</h3>
             </div>
             <div class="coach-body">
-                <p id="coach-advice" style="line-height: 1.6;">Carga un vídeo para recibir correcciones técnicas.</p>
+                <p id="coach-advice" style="line-height: 1.6;"></p>
             </div>
         </div>
     </section>
@@ -132,7 +160,6 @@
     <!-- MODALES -->
     <div class="modal-overlay" id="modal-overlay">
         
-        <!-- NUEVO MODAL DEL HISTORIAL -->
         <div class="legal-modal" id="modal-history">
             <div class="modal-header">
                 <h2>Tu Historial en la Nube</h2>
@@ -140,9 +167,7 @@
             </div>
             <div class="modal-body">
                 <p style="color: #aaa; font-size: 14px; margin-bottom: 15px;">Aquí se guardan tus registros para que midas tu progreso.</p>
-                <ul id="history-list" style="list-style: none; padding: 0; margin: 0; font-size: 15px; color: white; font-family: 'Roboto Mono', monospace;">
-                    <!-- Aquí aparecerán los saltos automáticamente -->
-                </ul>
+                <ul id="history-list" style="list-style: none; padding: 0; margin: 0; font-size: 15px; color: white; font-family: 'Roboto Mono', monospace;"></ul>
             </div>
         </div>
 
@@ -162,7 +187,7 @@
                 <span class="close-btn" onclick="closeModal()">✕</span>
             </div>
             <div class="modal-body">
-                <p>Las métricas son estimaciones mediante IA y dependen del ángulo de cámara. No es un dispositivo médico.</p>
+                <p>Las métricas son estimaciones mediante IA y dependen del ángulo de cámara. Usa grabaciones de perfil e iluminación clara para mayor precisión.</p>
             </div>
         </div>
     </div>
@@ -178,6 +203,7 @@
             const uploadLabel = document.getElementById('upload-label');
             const panelCarga = document.getElementById('panel-carga');
             const panelExtension = document.getElementById('panel-extension');
+            const instructions = document.getElementById('recording-instructions');
 
             if(mode === 'shot') {
                 btnShot.classList.add('active');
@@ -185,12 +211,28 @@
                 uploadLabel.innerText = 'ANALIZAR MI TIRO';
                 panelCarga.style.display = 'block';
                 panelExtension.style.display = 'block';
+                
+                // Instrucciones de Tiro
+                instructions.innerHTML = `
+                    <strong>📷 Cómo grabar tu tiro:</strong>
+                    • Grábate <b>de perfil</b> (de lado a la cámara).<br>
+                    • Que se vea tu brazo completo y el balón al soltarlo.<br>
+                    • Buena luz para que la IA detecte tu codo y hombro.
+                `;
             } else {
                 btnJump.classList.add('active');
                 btnShot.classList.remove('active');
                 uploadLabel.innerText = 'ANALIZAR MI SALTO';
                 panelCarga.style.display = 'none';
                 panelExtension.style.display = 'none';
+                
+                // Instrucciones de Salto
+                instructions.innerHTML = `
+                    <strong>🚀 Cómo grabar tu salto:</strong>
+                    • Grábate <b>de perfil o en diagonal</b>.<br>
+                    • Tienes que salir de <b>cuerpo entero</b> (que se vean tus pies en el suelo y tu cabeza en el aire).<br>
+                    • Mantén la cámara quieta (sin temblores).
+                `;
             }
         }
 
@@ -223,7 +265,6 @@
             document.body.style.overflow = 'auto';
         }
 
-        // Evento para el botón estético del historial
         document.getElementById('btn-show-history').addEventListener('click', () => {
             openModal('modal-history');
         });
